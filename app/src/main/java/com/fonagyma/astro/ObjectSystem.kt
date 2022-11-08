@@ -19,7 +19,7 @@ class ObjectSystem(){
     var drawing = false
     var afterD = false
     var clear= false
-    private val gC = 10f
+    private val gC = 2f
     lateinit var midPointF: PointF
 
    constructor(mp: PointF) : this() {

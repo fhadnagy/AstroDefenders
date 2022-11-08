@@ -38,12 +38,13 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private var togglePauseButton: RectF
 
     private var system : ObjectSystem
+    var mP= PointF(mScreenX.toFloat()/2,mScreenY.toFloat()/2)
 
     init {
         // Initialize the two buttons
         resetButton = RectF(mScreenX.toFloat()-150f, 50f, mScreenX.toFloat()-150f+100f, 50+100f)
         togglePauseButton = RectF(mScreenX.toFloat()-150f, 200f, mScreenX.toFloat()-150f+100f, 200+100f)
-        system = ObjectSystem(PointF(mScreenX.toFloat(),mScreenY.toFloat()))
+        system = ObjectSystem(mP)
 
     }
 
@@ -64,6 +65,9 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             paint.color = Color.argb(255, 25, 255, 25)
             canvas.drawRect(resetButton, paint)
             canvas.drawRect(togglePauseButton, paint)
+            paint.color = Color.argb(255, 255, 10, 25)
+            canvas.drawRect(mP.x-10f,mP.y-10f,mP.x+10f,mP.y+10f,paint)
+            paint.color = Color.argb(255, 25, 255, 25)
             if (debugging) {
                 printDebuggingText()
             }
@@ -167,7 +171,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             } else if (togglePauseButton.contains(motionEvent.x,
                     motionEvent.y)) {
 
-            }else{
+            }else if (!paused){
                 system.addObject(
                     PointF(motionEvent.x,
                         motionEvent.y)
