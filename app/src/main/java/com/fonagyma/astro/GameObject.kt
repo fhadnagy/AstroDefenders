@@ -4,7 +4,7 @@ import android.graphics.PointF
 
 class GameObject (direction: PointF){
 
-        private var velocity: PointF = PointF()
+        var velocity: PointF = PointF()
         val position: PointF = PointF()
 
         init {
