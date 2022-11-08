@@ -81,7 +81,7 @@ class ObjectSystem(){
             val direction: PointF
             direction = PointF(Math.cos(angle).toFloat() * speed,
                 Math.sin(angle).toFloat() * speed)*/
-            val g=GameObject(PointF(0f,0f))
+            val g=GameObject(PointF(2f,1f))
             g.position.x=sp.x
             g.position.y=sp.y
             gameObjects.add(g)
