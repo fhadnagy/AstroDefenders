@@ -19,7 +19,7 @@ class ObjectSystem(){
     var drawing = false
     var afterD = false
     var clear= false
-    private val gC = 2f
+    private val gC = 1000f
     lateinit var midPointF: PointF
 
    constructor(mp: PointF) : this() {
@@ -35,7 +35,8 @@ class ObjectSystem(){
         for (g in gameObjects) {
             var a= PointF(midPointF.x-g.position.x,midPointF.y-g.position.y)
             val xr = 1/sqrt(a.x*a.x+a.y*a.y)
-            a.x = gC*xr*xr*xr
+            a.x *= gC*xr*xr*xr
+            a.y *= gC*xr*xr*xr
             g.force(a)
             g.update()
         }
@@ -71,7 +72,7 @@ class ObjectSystem(){
         }
         drawing=false
         if(afterD){
-            var angle: Double = random.nextInt(360).toDouble()
+            /*var angle: Double = random.nextInt(360).toDouble()
             angle *= (3.14 / 180)
             // Option 1 - Slow particles
             val speed = random.nextFloat() / 3
@@ -79,8 +80,8 @@ class ObjectSystem(){
             //val speed = (random.nextInt(10)+1);
             val direction: PointF
             direction = PointF(Math.cos(angle).toFloat() * speed,
-                Math.sin(angle).toFloat() * speed)
-            val g=GameObject(direction)
+                Math.sin(angle).toFloat() * speed)*/
+            val g=GameObject(PointF(0f,0f))
             g.position.x=sp.x
             g.position.y=sp.y
             gameObjects.add(g)
