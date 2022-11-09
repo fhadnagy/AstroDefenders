@@ -132,7 +132,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private fun update() {
         // Update the particles
 
-            system.update()
+            system.update(fps)
 
 
     }

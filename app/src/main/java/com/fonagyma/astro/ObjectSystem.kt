@@ -31,14 +31,15 @@ class ObjectSystem(){
             afterD= true
     }
 
-    fun update() {
+    fun update(fps: Long) {
         for (g in gameObjects) {
+            /*gravity
             val a= PointF(midPointF.x-g.position.x,midPointF.y-g.position.y)
             val xr = 1/sqrt(a.x*a.x+a.y*a.y)
             a.x *= gC*xr*xr*xr
             a.y *= gC*xr*xr*xr
-            g.force(a)
-            g.update()
+            g.force(a)*/
+            g.update(fps)
             if(g.position.x>(midPointF.x*2)){
                 g.velocity.x *= -.9f
                 g.position.x = midPointF.x*2
@@ -97,9 +98,13 @@ class ObjectSystem(){
             val direction: PointF
             direction = PointF(Math.cos(angle).toFloat() * speed,
                 Math.sin(angle).toFloat() * speed)*/
-            val a= PointF(midPointF.x-sp.x,midPointF.y-sp.y)
+
+            /*val a= PointF(midPointF.x-sp.x,midPointF.y-sp.y)
             val xr = 1/ sqrt(a.x*a.x+a.y*a.y)
-            val g=GameObject(PointF(xr*(-1f)*a.y*gC*.0015f,xr*a.x*gC*.0015f))
+            val g=GameObject(PointF(xr*(-1f)*a.y*gC*.0015f,xr*a.x*gC*.0015f))*/
+            val gTarget= PointF(midPointF.x*2*.25f+random.nextFloat().times(midPointF.x),midPointF.y*2f)
+            val startD = PointF(gTarget.x-sp.x,gTarget.y-sp.y)
+            val g = GameObject(startD)
             g.position.x=sp.x
             g.position.y=sp.y
             gameObjects.add(g)
