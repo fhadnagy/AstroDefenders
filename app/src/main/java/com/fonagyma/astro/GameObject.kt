@@ -1,5 +1,7 @@
 package com.fonagyma.astro
 
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.PointF
 import android.graphics.RectF
 import java.lang.Math.pow
@@ -8,20 +10,16 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-class GameObject (direction: PointF){
+abstract class GameObject(pos: PointF){
 
-        var velocity: PointF = PointF()
-        val position: PointF = PointF()
-        var hitBoxR = 5f
-        val speed = .002f
-
-        init {
-            // Determine the direction
-            velocity.x = direction.x * speed
-            velocity.y = direction.y * speed
-        }
-
-        fun force(a: PointF){
+        var sizeX : Float = 1f
+        var sizey : Float = 1f
+        var turn : Float = 0f
+        var imageR : Int = -1
+        abstract fun log()
+        abstract fun draw(canvas : Canvas, paint: Paint)
+        abstract fun update(fps: Long)
+        /*fun force(a: PointF){
             velocity.x+=a.x
             velocity.y+=a.y
         }
@@ -40,6 +38,6 @@ class GameObject (direction: PointF){
                 return true
             }
             return false
-        }
+        }*/
 
 }

@@ -7,6 +7,9 @@ import android.graphics.*
 import android.util.Log
 import android.view.MotionEvent
 import android.view.SurfaceView
+import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 @SuppressLint("ViewConstructor")
 class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceView(context) , Runnable{
@@ -21,6 +24,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     @Volatile
     private var drawing: Boolean = false
     private var paused = true
+    private var clickableList = ArrayList<Clickable>()
 
     var mP= PointF(mScreenX.toFloat()/2,mScreenY.toFloat()/2)
     init {
@@ -39,7 +43,10 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             // Choose the font size
             paint.textSize = fontSize.toFloat()
             // Draw the particle systems
-            //.draw()
+            for (cl in clickableList)
+            {
+                cl.draw(canvas,paint)
+            }
 
 
             if (debugging) {
@@ -130,32 +137,30 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         if (motionEvent.action and MotionEvent.
             ACTION_MASK ==
             MotionEvent.ACTION_MOVE) {
-            /**
-            if (resetButton.contains(motionEvent.x,
-                    motionEvent.y)) {
-                // Clear the screen of all particles
+            for (cl in clickableList)
+            {
 
-            } */
+                    cl.onClick(PointF(motionEvent.x,motionEvent.y))
+
+            }
         }
         // Did the user touch the screen
         if (motionEvent.action and MotionEvent.ACTION_MASK ==
             MotionEvent.ACTION_DOWN) {
-            // User pressed the screen so let's
-            // see if it was in the reset button
-            /**TODO get a handler for all clickable surfaces
-             * if (resetButton.contains(motionEvent.x,
-                    motionEvent.y)) {
-                // Clear the screen of all particles
-                system.clear= true
-            } else if (togglePauseButton.contains(motionEvent.x,
-                    motionEvent.y)) {
-                paused = !paused
-            }else{
-                system.addObject(
-                    PointF(motionEvent.x,
-                        motionEvent.y)
-                )
-            }*/
+            var free = true
+            for (cl in clickableList) {
+                var js = cl as Joystick
+                val d= sqrt(abs(js.midP.x-motionEvent.x).pow(2)+ abs(js.midP.y-motionEvent.y).pow(2))
+                if (d<js.padRadius*2)
+                {
+                    cl.onClick(PointF(motionEvent.x,motionEvent.y))
+                    free = false
+                    break
+                }
+            }
+            if (free){
+                clickableList.add(Joystick(PointF(motionEvent.x,motionEvent.y),RectF(motionEvent.x-150f,motionEvent.y-150f,motionEvent.x+150f,motionEvent.y+150f)))
+            }
 
         }
         return true
