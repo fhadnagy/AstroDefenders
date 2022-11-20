@@ -50,10 +50,10 @@ class Joystick(pos: PointF, hitBox : RectF) : Clickable(pos, hitBox){
 
     override fun onClick(p: PointF) {
         val d= sqrt(abs(midP.x-p.x).pow(2)+abs(midP.y-p.y).pow(2))
-        if(d > padRadius - margin - cursorRadius*2)
+        if(d > padRadius - margin - cursorRadius)
         {
-            cursorP.x = (p.x-midP.x)/d* padRadius+ midP.x
-            cursorP.y = (p.y-midP.y)/d* padRadius+ midP.y
+            cursorP.x = (p.x-midP.x)/d* (padRadius-margin-cursorRadius)+ midP.x
+            cursorP.y = (p.y-midP.y)/d* (padRadius-margin-cursorRadius)+ midP.y
         }else{
             cursorP.x = p.x
             cursorP.y = p.y
