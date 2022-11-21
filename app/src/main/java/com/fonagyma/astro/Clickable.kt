@@ -1,17 +1,16 @@
 package com.fonagyma.astro
 
+import android.content.Context
 import android.graphics.*
 import android.util.Log
-import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 
-abstract class Clickable(pos: PointF, rect: RectF) : GameObject(pos) {
+abstract class Clickable(pos: PointF, rect: RectF,context: Context) : GameObject(pos,context) {
     var hitBox : RectF = rect
     abstract fun onClick(p : PointF)
 }
 
-class Joystick(pos: PointF, hitBox : RectF) : Clickable(pos, hitBox){
+class Joystick(pos: PointF, hitBox : RectF,context: Context) : Clickable(pos, hitBox,context){
     var midP = PointF((hitBox.left+hitBox.right)/2,(hitBox.bottom+hitBox.top)/2)
     var cursorP : PointF = PointF(midP.x,midP.y)
     var colorBg = Color.argb(255,255,155,155)
@@ -20,6 +19,8 @@ class Joystick(pos: PointF, hitBox : RectF) : Clickable(pos, hitBox){
     var padRadius : Float = 140f
     var margin = 5f
     var cursorRadius: Float
+    var showHitbox = true
+    var rotation = 0f
     init {
         //cursorRadius = (hitBox.bottom-hitBox.top)/3f
         cursorRadius = 40f
@@ -28,8 +29,6 @@ class Joystick(pos: PointF, hitBox : RectF) : Clickable(pos, hitBox){
 
     override fun draw(canvas: Canvas,paint: Paint) {
 
-        //paint.color= Color.argb(255,255,255,255)
-        //canvas.drawRect(hitBox,paint)
         paint.color= colorBg
         canvas.drawCircle(midP.x,midP.y,padRadius,paint)
         paint.color = colorFg
@@ -40,20 +39,22 @@ class Joystick(pos: PointF, hitBox : RectF) : Clickable(pos, hitBox){
         canvas.drawCircle(midP.x,midP.y,strokeWidth*2,paint)
         //paint.strokeWidth= strokeWidth
         //canvas.drawLine(midP.x,midP.y,cursorP.x,cursorP.y,paint)
-        paint.color= Color.argb(255,255,255,0)
-        paint.strokeWidth=strokeWidth
-        canvas.drawLine(hitBox.left,hitBox.top,hitBox.right,hitBox.top,paint)
-        canvas.drawLine(hitBox.left,hitBox.bottom,hitBox.right,hitBox.bottom,paint)
-        canvas.drawLine(hitBox.left,hitBox.top,hitBox.left,hitBox.bottom,paint)
-        canvas.drawLine(hitBox.right,hitBox.top,hitBox.right,hitBox.bottom,paint)
+        if (showHitbox){
+            paint.color= Color.argb(255,255,255,0)
+            paint.strokeWidth=strokeWidth
+            canvas.drawLine(hitBox.left,hitBox.top,hitBox.right,hitBox.top,paint)
+            canvas.drawLine(hitBox.left,hitBox.bottom,hitBox.right,hitBox.bottom,paint)
+            canvas.drawLine(hitBox.left,hitBox.top,hitBox.left,hitBox.bottom,paint)
+            canvas.drawLine(hitBox.right,hitBox.top,hitBox.right,hitBox.bottom,paint)
+        }
     }
 
     override fun log() {
         TODO("Not yet implemented")
     }
 
-    override fun update(fps: Long) {
-        TODO("Not yet implemented")
+    override fun update(millisPassed: Long, vararg plus: Float) {
+
     }
 
     override fun onClick(p: PointF) {
@@ -66,6 +67,30 @@ class Joystick(pos: PointF, hitBox : RectF) : Clickable(pos, hitBox){
             cursorP.x = p.x
             cursorP.y = p.y
         }
-        Log.d("onCLick","you hit a joystick")
+        val dy= midP.y-cursorP.y
+        val dx= cursorP.x-midP.x
+
+        if (cursorP.x==midP.x && cursorP.y==midP.y)
+        {
+            rotation=0f
+        }else{
+
+            val rt = atan(dx/abs(dy))*180f/ PI
+            Log.d("onCLickJs","rt: $rt")
+            if(rt==0.toDouble() && dy<0){
+                rotation=180f
+            }else if(rt<0 && dy>0){
+                rotation=rt.toFloat()
+            }else if(rt>0 && dy>0){
+                rotation=rt.toFloat()
+            }else if(rt<0 && dy<0){
+                rotation=-180f-rt.toFloat()
+            }else if(rt>0 && dy<0){
+                rotation=180f-rt.toFloat()
+            }
+
+        }
+        Log.d("onCLickJs","dy:$dy dx:$dx  rotation: $rotation")
+
     }
 }

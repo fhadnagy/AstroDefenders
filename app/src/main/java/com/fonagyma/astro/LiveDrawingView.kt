@@ -17,20 +17,26 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private lateinit var canvas: Canvas
     private val paint: Paint = Paint()
     private var fps: Long = 0
+    private var msPassed= System.currentTimeMillis()
+    private var prevFrameMillis: Long = 0
     private val millisInSecond: Long = 1000
-    private val fontSize: Int = mScreenX / 20
-    private val fontMargin: Int = mScreenX / 75
+    private val fontSize: Int = mScreenX /15
     private lateinit var thread: Thread
     @Volatile
     private var drawing: Boolean = false
-    private var paused = true
+    private var paused = false
     private var clickableList = ArrayList<Clickable>()
-
-    var mP= PointF(mScreenX.toFloat()/2,mScreenY.toFloat()/2)
+    private var drawables = ArrayList<GameObject>()
+    private var js : Joystick
+    private var cnn : Cannon
+    ///var mP= PointF(mScreenX.toFloat()/2,mScreenY.toFloat()/2)
     init {
-
-
+        clickableList.add(Joystick(PointF(mScreenX*.6f,mScreenY*.7f),RectF(mScreenX*.6f,mScreenY*.7f,mScreenX-5f,mScreenY-5f),context))
+        drawables.add(Cannon(PointF(mScreenX*.5f,mScreenY*.8f),context))
+        js = clickableList[0] as Joystick
+        cnn = drawables[0] as Cannon
     }
+
 
     private fun draw(){
         if (holder.surface.isValid){
@@ -46,6 +52,9 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             for (cl in clickableList)
             {
                 cl.draw(canvas,paint)
+            }
+            for(go in drawables){
+                go.draw(canvas,paint)
             }
 
 
@@ -80,6 +89,8 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             // What time is it now at the
             // start of the loop?
             val frameStartTime = System.currentTimeMillis()
+            msPassed = frameStartTime-prevFrameMillis
+            prevFrameMillis = frameStartTime
             // Provided the app isn't paused
             // call the update function
             if (!paused) {
@@ -101,12 +112,19 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                 // of our particles in the next frame/loop
                 fps = millisInSecond / timeThisFrame
             }
+
         }
     }
 
     private fun update() {
-        // Update the particles
-        //updates
+        for (cl in clickableList){
+            cl.update(msPassed)
+        }
+        for(go in drawables){
+            go.update(msPassed)
+        }
+        cnn.update(msPassed,js.rotation)
+
 
     }
 
@@ -131,37 +149,26 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         thread.start()
     }
 
+
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(
         motionEvent: MotionEvent
     ): Boolean {
         if (motionEvent.action and MotionEvent.
             ACTION_MASK ==
             MotionEvent.ACTION_MOVE) {
-            for (cl in clickableList)
-            {
-
-                    cl.onClick(PointF(motionEvent.x,motionEvent.y))
-
-            }
+                if (js.hitBox.contains(motionEvent.x,motionEvent.y))
+                    js.onClick(PointF(motionEvent.x,motionEvent.y))
         }
         // Did the user touch the screen
         if (motionEvent.action and MotionEvent.ACTION_MASK ==
             MotionEvent.ACTION_DOWN) {
-            var free = true
             for (cl in clickableList) {
-                var js = cl as Joystick
-                val d= sqrt(abs(js.midP.x-motionEvent.x).pow(2)+ abs(js.midP.y-motionEvent.y).pow(2))
-                if (d<js.padRadius*2)
+                if(cl.hitBox.contains(motionEvent.x,motionEvent.y))
                 {
                     cl.onClick(PointF(motionEvent.x,motionEvent.y))
-                    free = false
-                    break
                 }
             }
-            if (free){
-                clickableList.add(Joystick(PointF(motionEvent.x,motionEvent.y),RectF(motionEvent.x-150f,motionEvent.y-150f,motionEvent.x+150f,motionEvent.y+150f)))
-            }
-
         }
         return true
     }
