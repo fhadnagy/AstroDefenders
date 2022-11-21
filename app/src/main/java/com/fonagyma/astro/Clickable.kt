@@ -22,10 +22,12 @@ class Joystick(pos: PointF, hitBox : RectF) : Clickable(pos, hitBox){
     var cursorRadius: Float
     init {
         //cursorRadius = (hitBox.bottom-hitBox.top)/3f
-        cursorRadius = 25f
+        cursorRadius = 40f
     }
+    constructor(pos: PointF,hitBox: RectF,)
 
     override fun draw(canvas: Canvas,paint: Paint) {
+
         //paint.color= Color.argb(255,255,255,255)
         //canvas.drawRect(hitBox,paint)
         paint.color= colorBg
@@ -35,9 +37,15 @@ class Joystick(pos: PointF, hitBox : RectF) : Clickable(pos, hitBox){
         paint.color = colorBg
         canvas.drawCircle(cursorP.x,cursorP.y,cursorRadius-strokeWidth,paint)
         paint.color = colorFg
-        canvas.drawCircle(midP.x,midP.y,strokeWidth,paint)
-        paint.strokeWidth= strokeWidth
-        canvas.drawLine(midP.x,midP.y,cursorP.x,cursorP.y,paint)
+        canvas.drawCircle(midP.x,midP.y,strokeWidth*2,paint)
+        //paint.strokeWidth= strokeWidth
+        //canvas.drawLine(midP.x,midP.y,cursorP.x,cursorP.y,paint)
+        paint.color= Color.argb(255,255,255,0)
+        paint.strokeWidth=strokeWidth
+        canvas.drawLine(hitBox.left,hitBox.top,hitBox.right,hitBox.top,paint)
+        canvas.drawLine(hitBox.left,hitBox.bottom,hitBox.right,hitBox.bottom,paint)
+        canvas.drawLine(hitBox.left,hitBox.top,hitBox.left,hitBox.bottom,paint)
+        canvas.drawLine(hitBox.right,hitBox.top,hitBox.right,hitBox.bottom,paint)
     }
 
     override fun log() {
