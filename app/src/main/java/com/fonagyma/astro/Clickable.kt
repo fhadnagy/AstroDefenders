@@ -24,7 +24,7 @@ class Joystick(pos: PointF, hitBox : RectF) : Clickable(pos, hitBox){
         //cursorRadius = (hitBox.bottom-hitBox.top)/3f
         cursorRadius = 40f
     }
-    constructor(pos: PointF,hitBox: RectF,)
+    //constructor(pos: PointF,hitBox: RectF,)
 
     override fun draw(canvas: Canvas,paint: Paint) {
 
