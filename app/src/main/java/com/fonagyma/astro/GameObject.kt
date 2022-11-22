@@ -44,9 +44,12 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
 
         var rotation : Float = 0f
         var millisSinceStart: Long= 0
+        var aimSpeed : Float = 1f
+        var aimDotN : Int = 12
+        var aimLengthToCannonLength : Float = 2f
         init {
-                sizeX=1.5f
-                sizeY=2.7f
+                sizeX=1f
+                sizeY=1.5f
 
             imageR= R.drawable.cannon
             imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
@@ -69,6 +72,26 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
 
 
         override fun draw(canvas: Canvas, paint: Paint) {
+                paint.color=Color.argb(255,255,0,0)
+                //direction
+                val v = rotateVector(PointF(0f,-imageBitmap.height.toFloat()*aimLengthToCannonLength),-rotation/180f* PI)
+
+                //draw dots at timeRatio of all aimDotN segments
+                val timeRatio: Float = (millisSinceStart%2000).toFloat()/(1000f/aimSpeed)
+
+                paint.color=Color.argb(255,0,255,0)
+                if (aimDotN>0){
+                        for(a in 1..aimDotN){
+                                val ratio = (a-1+timeRatio)/aimDotN.toFloat()
+                                val k= PointF(position.x+v.x*ratio,position.y+v.y*ratio)
+                                canvas.drawCircle(k.x,k.y,15f*(1-ratio)+5,paint)
+
+                        }
+                }else{
+                        //line on full length
+                        canvas.drawLine(position.x,position.y,position.x+v.x,position.y+v.y,paint)
+                }
+
                 val matrix = Matrix()
                 matrix.preRotate(rotation)
                 matrix.preScale(sizeX,sizeY)
