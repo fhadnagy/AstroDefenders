@@ -43,24 +43,28 @@ abstract class GameObject(pos: PointF, context: Context){
 class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
 
         var rotation : Float = 0f
+        var millisSinceStart: Long= 0
         init {
                 sizeX=1.5f
                 sizeY=2.7f
-            imageR= R.drawable.rotationtest
+
+            imageR= R.drawable.cannon
             imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
                 Log.d("inf","${imageBitmap.height} ${imageBitmap.width} ")
                 //20 10 so
-                cP= PointF(imageBitmap.width*(55f/100f)-imageBitmap.width/2f,imageBitmap.height*(49f/100f)-imageBitmap.height/2f)
-                cP.x*=sizeX
-                cP.y*=sizeY
+                cP= PointF(imageBitmap.width*(25f/50f)-imageBitmap.width/2f,imageBitmap.height*(75f/100f)-imageBitmap.height/2f)
         }
 
         override fun update(millisPassed: Long, vararg plus: Float) {
+                millisSinceStart+=millisPassed
+                Log.d("ms", "millisSinceStart")
                 rotation = if (plus.isNotEmpty()){
                         plus[0]
                 }else{
                         0f
                 }
+                //sizeY= 2f+sin(millisSinceStart.toDouble()/1000f*2* PI).toFloat()
+                //sizeX= 2f+sin(millisSinceStart.toDouble()/1000f*2* PI).toFloat()
         }
 
 
@@ -70,7 +74,7 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
                 matrix.preScale(sizeX,sizeY)
                 val myB = Bitmap.createBitmap(imageBitmap,0, 0, imageBitmap.width, imageBitmap.height, matrix, true)
 
-                val c = rotateVector(cP,-rotation/180f* PI)
+                val c = rotateVector(PointF(cP.x*sizeX,cP.y*sizeY),-rotation/180f* PI)
                 canvas.drawBitmap(myB,position.x-myB.width/2-c.x,position.y-myB.height/2-c.y,paint)
 
                 /*paint.color=Color.argb(255,255,0,0)
