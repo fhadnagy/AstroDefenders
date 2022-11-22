@@ -2,6 +2,7 @@ package com.fonagyma.astro
 
 import android.content.Context
 import android.graphics.*
+import android.util.Log
 import java.lang.Math.*
 
 abstract class GameObject(pos: PointF, context: Context){
@@ -43,12 +44,15 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
 
         var rotation : Float = 0f
         init {
-                sizeX=1f
-                sizeY=1f
+                sizeX=1.5f
+                sizeY=2.7f
             imageR= R.drawable.rotationtest
             imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
+                Log.d("inf","${imageBitmap.height} ${imageBitmap.width} ")
                 //20 10 so
-                cP= PointF(20f-imageBitmap.width/2f,10f-imageBitmap.height/2f)
+                cP= PointF(imageBitmap.width*(55f/100f)-imageBitmap.width/2f,imageBitmap.height*(49f/100f)-imageBitmap.height/2f)
+                cP.x*=sizeX
+                cP.y*=sizeY
         }
 
         override fun update(millisPassed: Long, vararg plus: Float) {
@@ -65,8 +69,17 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
                 matrix.preRotate(rotation)
                 matrix.preScale(sizeX,sizeY)
                 val myB = Bitmap.createBitmap(imageBitmap,0, 0, imageBitmap.width, imageBitmap.height, matrix, true)
-                val c = rotateVector(cP,rotation/180f* PI)
-                canvas.drawBitmap(myB,position.x-imageBitmap.width/2f-c.x*sizeX,position.y-imageBitmap.height/2f-c.y*sizeY,paint)
+
+                val c = rotateVector(cP,-rotation/180f* PI)
+                canvas.drawBitmap(myB,position.x-myB.width/2-c.x,position.y-myB.height/2-c.y,paint)
+
+                /*paint.color=Color.argb(255,255,0,0)
+                canvas.drawLine(position.x,position.y,position.x+myB.width/2,
+                position.y+myB.height/2,paint)
+                paint.color=Color.argb(255,255,255,0)
+                canvas.drawLine(position.x+myB.width/2, position.y+myB.height/2,
+                position.x+myB.width/2+c.x, position.y+myB.height/2+c.y, paint)*/
+
         }
 
         override fun log() {
