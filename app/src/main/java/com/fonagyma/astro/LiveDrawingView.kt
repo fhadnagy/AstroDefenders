@@ -121,9 +121,9 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             cl.update(msPassed)
         }
         for(go in drawables){
-            go.update(msPassed)
+            go.update(msPassed,js.rotation)
         }
-        cnn.update(msPassed,js.rotation)
+
 
 
     }
