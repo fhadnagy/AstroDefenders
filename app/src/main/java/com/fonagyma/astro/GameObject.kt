@@ -2,18 +2,15 @@ package com.fonagyma.astro
 
 import android.content.Context
 import android.graphics.*
-import java.lang.Math.pow
-import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
-import kotlin.random.Random
+import java.lang.Math.*
 
 abstract class GameObject(pos: PointF, context: Context){
 
         var sizeX : Float = 1f
-        var sizey : Float = 1f
+        var sizeY : Float = 1f
         var turn : Float = 0f
         var position = pos
+        lateinit var cP : PointF
         lateinit var imageBitmap : Bitmap
         var imageR : Int = -1
         abstract fun log()
@@ -46,8 +43,11 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
 
         var rotation : Float = 0f
         init {
+                sizeX=2f
+                sizeY=2f
             imageR= R.drawable.cannonfull
             imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
+                cP= PointF(imageBitmap.width/2f-0f,imageBitmap.height/2f-15f)
         }
 
         override fun update(millisPassed: Long, vararg plus: Float) {
@@ -62,12 +62,17 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
         override fun draw(canvas: Canvas, paint: Paint) {
                 val matrix = Matrix()
                 matrix.preRotate(rotation)
-                matrix.preScale(sizeX,sizey)
+                matrix.preScale(sizeX,sizeY)
                 val myB = Bitmap.createBitmap(imageBitmap,0, 0, imageBitmap.width, imageBitmap.height, matrix, true)
-                canvas.drawBitmap(myB,position.x-myB.width/2,position.y-myB.height/2,paint)
+                val c = rotateVector(cP,rotation/180f* PI)
+                canvas.drawBitmap(myB,position.x-imageBitmap.width/2f-c.x*sizeX,position.y-imageBitmap.height/2-c.y*sizeY,paint)
         }
 
         override fun log() {
                 TODO("Not yet implemented")
         }
+}
+
+fun rotateVector(v : PointF, rad: Double): PointF{
+        return PointF((cos(rad)*v.x+ sin(rad)*v.y).toFloat(), (cos(rad)*v.y- sin(rad)*v.x).toFloat())
 }
