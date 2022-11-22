@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.*
 import android.util.Log
 import java.lang.Math.*
+import kotlin.math.pow
+import kotlin.random.Random
 
 abstract class GameObject(pos: PointF, context: Context){
 
@@ -45,11 +47,12 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
         var rotation : Float = 0f
         var millisSinceStart: Long= 0
         var aimSpeed : Float = .7f
+        var ballStartV = PointF()
         var aimDotN : Int = 15
         var aimLengthToCannonLength : Float = 3f
         init {
                 sizeX=1f
-                sizeY=1.5f
+                sizeY=1f
 
             imageR= R.drawable.cannon
             imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
@@ -60,12 +63,13 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
 
         override fun update(millisPassed: Long, vararg plus: Float) {
                 millisSinceStart+=millisPassed
-                Log.d("ms", "millisSinceStart")
+                Log.d("ms", "$millisSinceStart")
                 rotation = if (plus.isNotEmpty()){
                         plus[0]
                 }else{
                         0f
                 }
+                ballStartV= rotateVector(PointF(0f,-imageBitmap.height.toFloat()*.8f),-rotation/180f* PI)
                 //sizeY= 2f+sin(millisSinceStart.toDouble()/1000f*2* PI).toFloat()
                 //sizeX= 2f+sin(millisSinceStart.toDouble()/1000f*2* PI).toFloat()
         }
@@ -120,4 +124,49 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
 
 fun rotateVector(v : PointF, rad: Double): PointF{
         return PointF((cos(rad)*v.x+ sin(rad)*v.y).toFloat(), (cos(rad)*v.y- sin(rad)*v.x).toFloat())
+}
+
+class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF) : GameObject(pos,context){
+        var direction : PointF
+        var speed = 500f
+        private var wall : PointF
+        private val colorM = Color.argb(255,Random.nextInt(255),Random.nextInt(255),Random.nextInt(255))
+        init {
+                direction =PointF( velocity.x/(kotlin.math.sqrt(
+                        kotlin.math.abs(velocity.x).pow(2) + kotlin.math.abs(velocity.y).pow(2))),
+                 velocity.y/(kotlin.math.sqrt(
+                        kotlin.math.abs(velocity.x).pow(2) + kotlin.math.abs(velocity.y).pow(2))))
+                wall = walle
+        }
+        override fun draw(canvas: Canvas, paint: Paint) {
+                paint.color=colorM
+                canvas.drawCircle(position.x,position.y,30f,paint)
+        }
+
+        override fun log() {
+                TODO("Not yet implemented")
+        }
+
+        override fun update(millisPassed: Long, vararg plus: Float) {
+                position.x+=direction.x*speed*millisPassed/1000
+                position.y+=direction.y*speed*millisPassed/1000
+
+                        if(position.x>wall.x){
+                                direction.x *= -.9f
+                                position.x = wall.x
+                        }
+                        if(position.y>wall.y){
+                                direction.y *= -.9f
+                                position.y = wall.y
+                        }
+                        if(position.x<0f){
+                                direction.x *= -.9f
+                                position.x = 0f
+                        }
+                        if(position.y<0f){
+                                direction.y *= -.9f
+                                position.y = 0f
+                        }
+
+        }
 }

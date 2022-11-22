@@ -17,11 +17,13 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private lateinit var canvas: Canvas
     private val paint: Paint = Paint()
     private var fps: Long = 0
+    private var gameTimeMillis :Long = 0
     private var msPassed= System.currentTimeMillis()
     private var prevFrameMillis: Long = 0
     private val millisInSecond: Long = 1000
     private val fontSize: Int = mScreenX /15
     private lateinit var thread: Thread
+    private val walls : PointF
     @Volatile
     private var drawing: Boolean = false
     private var paused = false
@@ -29,12 +31,14 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private var drawables = ArrayList<GameObject>()
     private var js : Joystick
     private var cnn : Cannon
+    private var pseRect = RectF(10f,10f,100f,100f)
     ///var mP= PointF(mScreenX.toFloat()/2,mScreenY.toFloat()/2)
     init {
         clickableList.add(Joystick(PointF(mScreenX*.6f,mScreenY*.7f),RectF(mScreenX*.6f,mScreenY*.7f,mScreenX-5f,mScreenY-5f),context))
-        drawables.add(Cannon(PointF(mScreenX*.5f,mScreenY*.8f),context))
+        drawables.add(Cannon(PointF(mScreenX*.3f,mScreenY*.9f),context))
         js = clickableList[0] as Joystick
         cnn = drawables[0] as Cannon
+        walls = PointF(mScreenX.toFloat(),mScreenY.toFloat())
     }
 
 
@@ -89,8 +93,14 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             // What time is it now at the
             // start of the loop?
             val frameStartTime = System.currentTimeMillis()
-            msPassed = frameStartTime-prevFrameMillis
+            if (prevFrameMillis>0){
+                msPassed = frameStartTime-prevFrameMillis
+            }else{
+                msPassed = 0
+            }
             prevFrameMillis = frameStartTime
+            gameTimeMillis+=msPassed
+
             // Provided the app isn't paused
             // call the update function
             if (!paused) {
@@ -117,14 +127,20 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     }
 
     private fun update() {
-        for (cl in clickableList){
-            cl.update(msPassed)
-        }
-        for(go in drawables){
-            go.update(msPassed,js.rotation)
-        }
+        if(!paused){
+            for (cl in clickableList){
+                cl.update(msPassed)
+            }
+            for(go in drawables){
+                go.update(msPassed,js.rotation)
+            }
+            if (gameTimeMillis/500 > drawables.size){
+                Log.d("gtms","$gameTimeMillis")
 
-
+                drawables.add(Ball(PointF(cnn.position.x+cnn.ballStartV.x, cnn.position.y+cnn.ballStartV.y),
+                    context, cnn.ballStartV, walls))
+            }
+        }
 
     }
 
@@ -167,6 +183,16 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                 if(cl.hitBox.contains(motionEvent.x,motionEvent.y))
                 {
                     cl.onClick(PointF(motionEvent.x,motionEvent.y))
+                }
+            }
+            if(pseRect.contains(motionEvent.x,motionEvent.y)){
+                if (paused)
+                {
+                    paused=false
+                    resume()
+                }else{
+                    paused=true
+                    pause()
                 }
             }
         }
