@@ -43,11 +43,12 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
 
         var rotation : Float = 0f
         init {
-                sizeX=2f
-                sizeY=2f
-            imageR= R.drawable.cannonfull
+                sizeX=1f
+                sizeY=1f
+            imageR= R.drawable.rotationtest
             imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
-                cP= PointF(imageBitmap.width/2f-0f,imageBitmap.height/2f-15f)
+                //20 10 so
+                cP= PointF(20f-imageBitmap.width/2f,10f-imageBitmap.height/2f)
         }
 
         override fun update(millisPassed: Long, vararg plus: Float) {
@@ -65,7 +66,7 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
                 matrix.preScale(sizeX,sizeY)
                 val myB = Bitmap.createBitmap(imageBitmap,0, 0, imageBitmap.width, imageBitmap.height, matrix, true)
                 val c = rotateVector(cP,rotation/180f* PI)
-                canvas.drawBitmap(myB,position.x-imageBitmap.width/2f-c.x*sizeX,position.y-imageBitmap.height/2-c.y*sizeY,paint)
+                canvas.drawBitmap(myB,position.x-imageBitmap.width/2f-c.x*sizeX,position.y-imageBitmap.height/2f-c.y*sizeY,paint)
         }
 
         override fun log() {
