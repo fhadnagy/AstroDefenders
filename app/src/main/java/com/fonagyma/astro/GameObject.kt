@@ -192,7 +192,7 @@ class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF) : Ga
                         val e = PointF(position.y-other.position.y,other.position.x-position.x)
                         val dv = kotlin.math.sqrt(kotlin.math.abs(vx).pow(2) + kotlin.math.abs(vy).pow(2))
 
-                        val angle = atan(e.y.toDouble()/e.y.toDouble())
+                        val angle = atan(e.y.toDouble()/e.x.toDouble())
                         val va= rotateVector(direction,angle)
                         val vb= rotateVector(other.direction,angle)
 
