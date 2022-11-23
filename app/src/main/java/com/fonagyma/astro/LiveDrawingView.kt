@@ -128,13 +128,21 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
 
     private fun update() {
         if(!paused){
+            if (drawables.size>0){
+                for(a in 1..drawables.size-2){
+                    for(b in a+1..drawables.size-1){
+                        (drawables[a] as Ball).collide(drawables[b] as Ball)
+                    }
+                }
+            }
+            for(a in 1..drawables.size-2)
             for (cl in clickableList){
                 cl.update(msPassed)
             }
             for(go in drawables){
                 go.update(msPassed,js.rotation)
             }
-            if (gameTimeMillis/500 > drawables.size){
+            if (gameTimeMillis/3000 > drawables.size){
                 Log.d("gtms","$gameTimeMillis")
 
                 drawables.add(Ball(PointF(cnn.position.x+cnn.ballStartV.x, cnn.position.y+cnn.ballStartV.y),
@@ -152,9 +160,12 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         try {
             // Stop the thread
             thread.join()
+            prevFrameMillis=0
         } catch (e: InterruptedException) {
             Log.e("Error:", "joining thread")
         }
+        prevFrameMillis=0
+
     }
 
     fun resume() {

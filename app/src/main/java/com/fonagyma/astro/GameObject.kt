@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.Log
 import java.lang.Math.*
+import kotlin.math.atan
 import kotlin.math.pow
 import kotlin.random.Random
 
@@ -126,12 +127,21 @@ fun rotateVector(v : PointF, rad: Double): PointF{
         return PointF((cos(rad)*v.x+ sin(rad)*v.y).toFloat(), (cos(rad)*v.y- sin(rad)*v.x).toFloat())
 }
 
+fun mirrorVectorToVector(v:PointF,e:PointF):PointF{
+        val angle = atan(e.y.toDouble()/e.y.toDouble())
+        val va= rotateVector(v,angle)
+        va.y*=-1f
+        return rotateVector(va,-angle)
+}
+
 class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF) : GameObject(pos,context){
         var direction : PointF
+        var hitBoxR : Float
         var speed = 500f
         private var wall : PointF
         private val colorM = Color.argb(255,Random.nextInt(255),Random.nextInt(255),Random.nextInt(255))
         init {
+                hitBoxR = 50f
                 direction =PointF( velocity.x/(kotlin.math.sqrt(
                         kotlin.math.abs(velocity.x).pow(2) + kotlin.math.abs(velocity.y).pow(2))),
                  velocity.y/(kotlin.math.sqrt(
@@ -140,7 +150,7 @@ class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF) : Ga
         }
         override fun draw(canvas: Canvas, paint: Paint) {
                 paint.color=colorM
-                canvas.drawCircle(position.x,position.y,30f,paint)
+                canvas.drawCircle(position.x,position.y,hitBoxR,paint)
         }
 
         override fun log() {
@@ -168,5 +178,34 @@ class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF) : Ga
                                 position.y = 0f
                         }
 
+        }
+        fun collide(other: Ball){
+                val d= kotlin.math.sqrt(
+                        kotlin.math.abs(position.x - other.position.x).pow(2) + kotlin.math.abs(position.y - other.position.y).pow(2)
+                )
+
+                if (hitBoxR+other.hitBoxR-1f>d){
+                        val mx = (position.x + other.position.x)/2f
+                        val my = (position.y + other.position.y)/2f
+                        val vx = position.x-mx
+                        val vy = position.y-my
+                        val e = PointF(position.y-other.position.y,other.position.x-position.x)
+                        val dv = kotlin.math.sqrt(kotlin.math.abs(vx).pow(2) + kotlin.math.abs(vy).pow(2))
+
+                        val angle = atan(e.y.toDouble()/e.y.toDouble())
+                        val va= rotateVector(direction,angle)
+                        val vb= rotateVector(other.direction,angle)
+
+                        var tempV = va.y
+                        va.y=vb.y
+                        vb.y=tempV
+
+                        direction = rotateVector(va,-angle)
+                        other.direction = rotateVector(vb,-angle)
+                        position.x = mx + vx /dv * hitBoxR*1.01f
+                        position.y = my + vy /dv * hitBoxR*1.01f
+                        other.position.x = mx - vx /dv * other.hitBoxR*1.2f
+                        other.position.y = my - vy /dv * other.hitBoxR*1.2f
+                }
         }
 }
