@@ -134,14 +134,17 @@ fun mirrorVectorToVector(v:PointF,e:PointF):PointF{
         return rotateVector(va,-angle)
 }
 
-class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF) : GameObject(pos,context){
+class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF, hR : Float, mss :Float,spd :Float) : GameObject(pos,context){
         var direction : PointF
         var hitBoxR : Float
+        var mass :Float
         var speed = 500f
         private var wall : PointF
         private val colorM = Color.argb(255,Random.nextInt(255),Random.nextInt(255),Random.nextInt(255))
         init {
-                hitBoxR = 50f
+                hitBoxR = hR
+                mass = mss
+                speed = spd
                 direction =PointF( velocity.x/(kotlin.math.sqrt(
                         kotlin.math.abs(velocity.x).pow(2) + kotlin.math.abs(velocity.y).pow(2))),
                  velocity.y/(kotlin.math.sqrt(
@@ -196,16 +199,16 @@ class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF) : Ga
                         val va= rotateVector(direction,angle)
                         val vb= rotateVector(other.direction,angle)
 
-                        var tempV = va.y
-                        va.y=vb.y
+                        var tempV = va.y*mass*speed/(other.mass*other.speed)
+                        va.y=vb.y*other.mass*other.speed/(mass*speed)
                         vb.y=tempV
 
                         direction = rotateVector(va,-angle)
                         other.direction = rotateVector(vb,-angle)
-                        position.x = mx + vx /dv * hitBoxR*1.01f
-                        position.y = my + vy /dv * hitBoxR*1.01f
-                        other.position.x = mx - vx /dv * other.hitBoxR*1.2f
-                        other.position.y = my - vy /dv * other.hitBoxR*1.2f
+                        position.x = mx + vx /dv * hitBoxR
+                        position.y = my + vy /dv * hitBoxR
+                        other.position.x = mx - vx /dv * other.hitBoxR
+                        other.position.y = my - vy /dv * other.hitBoxR
                 }
         }
 }
