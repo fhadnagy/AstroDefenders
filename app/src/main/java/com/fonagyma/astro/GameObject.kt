@@ -140,7 +140,7 @@ class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF, hR :
         var mass :Float
         var speed = 500f
         private var wall : PointF
-        private val colorM = Color.argb(255,Random.nextInt(255),Random.nextInt(255),Random.nextInt(255))
+        private val colorM = Color.argb(255,Random(System.currentTimeMillis()).nextInt(255),Random(System.currentTimeMillis()).nextInt(255),Random(System.currentTimeMillis()).nextInt(255))
         init {
                 hitBoxR = hR
                 mass = mss
@@ -164,21 +164,21 @@ class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF, hR :
                 position.x+=direction.x*speed*millisPassed/1000
                 position.y+=direction.y*speed*millisPassed/1000
 
-                        if(position.x>wall.x){
+                        if(position.x>wall.x-hitBoxR){
                                 direction.x *= -.9f
-                                position.x = wall.x
+                                position.x = wall.x-hitBoxR
                         }
-                        if(position.y>wall.y){
+                        if(position.y>wall.y-hitBoxR){
                                 direction.y *= -.9f
-                                position.y = wall.y
+                                position.y = wall.y-hitBoxR
                         }
-                        if(position.x<0f){
+                        if(position.x<hitBoxR){
                                 direction.x *= -.9f
-                                position.x = 0f
+                                position.x = hitBoxR
                         }
-                        if(position.y<0f){
+                        if(position.y<hitBoxR){
                                 direction.y *= -.9f
-                                position.y = 0f
+                                position.y = hitBoxR
                         }
 
         }
@@ -188,8 +188,8 @@ class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF, hR :
                 )
 
                 if (hitBoxR+other.hitBoxR-1f>d){
-                        val mx = (position.x + other.position.x)/2f
-                        val my = (position.y + other.position.y)/2f
+                        val mx = (position.x*other.hitBoxR + other.position.x*hitBoxR)/(other.hitBoxR+hitBoxR)
+                        val my = (position.y*other.hitBoxR + other.position.y*hitBoxR)/(other.hitBoxR+hitBoxR)
                         val vx = position.x-mx
                         val vy = position.y-my
                         val e = PointF(position.y-other.position.y,other.position.x-position.x)
@@ -199,16 +199,16 @@ class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF, hR :
                         val va= rotateVector(direction,angle)
                         val vb= rotateVector(other.direction,angle)
 
-                        var tempV = va.y*mass*speed/(other.mass*other.speed)
-                        va.y=vb.y*other.mass*other.speed/(mass*speed)
+                        var tempV = va.y * mass/other.mass
+                        va.y=vb.y *other.mass/mass
                         vb.y=tempV
 
                         direction = rotateVector(va,-angle)
                         other.direction = rotateVector(vb,-angle)
-                        position.x = mx + vx /dv * hitBoxR
-                        position.y = my + vy /dv * hitBoxR
-                        other.position.x = mx - vx /dv * other.hitBoxR
-                        other.position.y = my - vy /dv * other.hitBoxR
+                        position.x = mx + vx /dv * hitBoxR * 1.001f
+                        position.y = my + vy /dv * hitBoxR * 1.001f
+                        other.position.x = mx - vx /dv * other.hitBoxR* 1.001f
+                        other.position.y = my - vy /dv * other.hitBoxR* 1.001f
                 }
         }
 }

@@ -39,8 +39,12 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         js = clickableList[0] as Joystick
         cnn = drawables[0] as Cannon
         walls = PointF(mScreenX.toFloat(),mScreenY.toFloat())
-        drawables.add(Ball(PointF(mScreenX*.5f,mScreenY*.3f),
-            context, PointF(1f,0f), walls, 60f, 5000f, 10f))
+        drawables.add(Ball(PointF(mScreenX*.5f,mScreenY*.5f),
+            context, PointF(1f,0f), walls, 60f, 36f, 200f))
+        drawables.add(Ball(PointF(mScreenX*.4f,mScreenY*.6f),
+            context, PointF(1f,0f), walls, 40f, 16f, 200f))
+        drawables.add(Ball(PointF(mScreenX*.3f,mScreenY*.7f),
+            context, PointF(1f,0f), walls, 30f, 9f, 200f))
     }
 
 
@@ -144,11 +148,11 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             for(go in drawables){
                 go.update(msPassed,js.rotation)
             }
-            if (gameTimeMillis/300 > drawables.size){
+            if (gameTimeMillis/500 > drawables.size){
                 Log.d("gtms","$gameTimeMillis")
 
                 drawables.add(Ball(PointF(cnn.position.x+cnn.ballStartV.x, cnn.position.y+cnn.ballStartV.y),
-                    context, cnn.ballStartV, walls, 20f, 1f, 200f))
+                    context, cnn.ballStartV, walls, 20f, 4f, 200f))
             }
         }
 
