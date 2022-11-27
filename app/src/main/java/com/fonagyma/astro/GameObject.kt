@@ -49,6 +49,8 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
         var millisSinceStart: Long= 0
         var aimSpeed : Float = .7f
         var ballStartV = PointF()
+        var ballStartP = PointF()
+        var ballStartS = 500f
         var aimDotN : Int = 15
         var aimLengthToCannonLength : Float = 3f
         init {
@@ -70,7 +72,11 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
                 }else{
                         0f
                 }
-                ballStartV= rotateVector(PointF(0f,-imageBitmap.height.toFloat()*.8f),-rotation/180f* PI)
+                ballStartP= rotateVector(PointF(0f,-imageBitmap.height.toFloat()*.8f),-rotation/180f* PI)
+                ballStartV= rotateVector(PointF(0f,-1f), -rotation/180f* PI)
+                ballStartV.x*=ballStartS
+                ballStartV.y*=ballStartS
+                Log.d("cannon  ","${ballStartV.x} ${ballStartV.y}")
                 //sizeY= 2f+sin(millisSinceStart.toDouble()/1000f*2* PI).toFloat()
                 //sizeX= 2f+sin(millisSinceStart.toDouble()/1000f*2* PI).toFloat()
         }
@@ -128,27 +134,23 @@ fun rotateVector(v : PointF, rad: Double): PointF{
 }
 
 fun mirrorVectorToVector(v:PointF,e:PointF):PointF{
-        val angle = atan(e.y.toDouble()/e.y.toDouble())
+        val angle = atan(e.y.toDouble()/e.x.toDouble())
         val va= rotateVector(v,angle)
         va.y*=-1f
         return rotateVector(va,-angle)
 }
 
-class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF, hR : Float, mss :Float,spd :Float) : GameObject(pos,context){
-        var direction : PointF
+class Ball(pos: PointF, context: Context, _velocity :PointF, walle : PointF, hR : Float, mss :Float) : GameObject(pos,context){
+        var velocity : PointF
         var hitBoxR : Float
         var mass :Float
-        var speed = 500f
         private var wall : PointF
-        private val colorM = Color.argb(255,Random(System.currentTimeMillis()).nextInt(255),Random(System.currentTimeMillis()).nextInt(255),Random(System.currentTimeMillis()).nextInt(255))
+        private val rnd = Random(System.currentTimeMillis())
+        private val colorM = Color.argb(255,rnd.nextInt(255),rnd.nextInt(255),rnd.nextInt(255))
         init {
                 hitBoxR = hR
                 mass = mss
-                speed = spd
-                direction =PointF( velocity.x/(kotlin.math.sqrt(
-                        kotlin.math.abs(velocity.x).pow(2) + kotlin.math.abs(velocity.y).pow(2))),
-                 velocity.y/(kotlin.math.sqrt(
-                        kotlin.math.abs(velocity.x).pow(2) + kotlin.math.abs(velocity.y).pow(2))))
+                velocity= PointF(_velocity.x,_velocity.y)
                 wall = walle
         }
         override fun draw(canvas: Canvas, paint: Paint) {
@@ -161,54 +163,72 @@ class Ball(pos: PointF, context: Context, velocity :PointF, walle : PointF, hR :
         }
 
         override fun update(millisPassed: Long, vararg plus: Float) {
-                position.x+=direction.x*speed*millisPassed/1000
-                position.y+=direction.y*speed*millisPassed/1000
+                position.x+=velocity.x*millisPassed/1000
+                position.y+=velocity.y*millisPassed/1000
 
                         if(position.x>wall.x-hitBoxR){
-                                direction.x *= -.9f
+                                velocity.x *= -.9f
                                 position.x = wall.x-hitBoxR
                         }
                         if(position.y>wall.y-hitBoxR){
-                                direction.y *= -.9f
+                                velocity.y *= -.9f
                                 position.y = wall.y-hitBoxR
                         }
                         if(position.x<hitBoxR){
-                                direction.x *= -.9f
+                                velocity.x *= -.9f
                                 position.x = hitBoxR
                         }
                         if(position.y<hitBoxR){
-                                direction.y *= -.9f
+                                velocity.y *= -.9f
                                 position.y = hitBoxR
                         }
 
         }
-        fun collide(other: Ball){
-                val d= kotlin.math.sqrt(
-                        kotlin.math.abs(position.x - other.position.x).pow(2) + kotlin.math.abs(position.y - other.position.y).pow(2)
+        fun collide(other: Ball): Boolean {
+                val d = kotlin.math.sqrt(
+                        kotlin.math.abs(position.x - other.position.x).pow(2) + kotlin.math.abs(
+                                position.y - other.position.y
+                        ).pow(2)
                 )
 
-                if (hitBoxR+other.hitBoxR-1f>d){
-                        val mx = (position.x*other.hitBoxR + other.position.x*hitBoxR)/(other.hitBoxR+hitBoxR)
-                        val my = (position.y*other.hitBoxR + other.position.y*hitBoxR)/(other.hitBoxR+hitBoxR)
-                        val vx = position.x-mx
-                        val vy = position.y-my
-                        val e = PointF(position.y-other.position.y,other.position.x-position.x)
-                        val dv = kotlin.math.sqrt(kotlin.math.abs(vx).pow(2) + kotlin.math.abs(vy).pow(2))
 
-                        val angle = atan(e.y.toDouble()/e.x.toDouble())
-                        val va= rotateVector(direction,angle)
-                        val vb= rotateVector(other.direction,angle)
+                if (hitBoxR + other.hitBoxR - 1f <= d) return false
 
-                        var tempV = va.y * mass/other.mass
-                        va.y=vb.y *other.mass/mass
-                        vb.y=tempV
+                /*val mid = PointF(
+                        (position.x * (other.hitBoxR + mass.pow(2)) + other.position.x * (hitBoxR + other.mass.pow(
+                                2
+                        ))) / (other.hitBoxR + hitBoxR + mass.pow(2) + other.mass.pow(2)),
+                        (position.y * (other.hitBoxR + mass.pow(2)) + other.position.y * (hitBoxR + other.mass.pow(
+                                2
+                        ))) / (other.hitBoxR + hitBoxR + mass.pow(2) + other.mass.pow(2))
+                )*/
+                val mid = PointF(
+                        (position.x * (other.hitBoxR) + other.position.x * (hitBoxR)) / (other.hitBoxR + hitBoxR),
+                        (position.y * (other.hitBoxR)+ other.position.y * (hitBoxR)) / (other.hitBoxR + hitBoxR))
 
-                        direction = rotateVector(va,-angle)
-                        other.direction = rotateVector(vb,-angle)
-                        position.x = mx + vx /dv * hitBoxR * 1.001f
-                        position.y = my + vy /dv * hitBoxR * 1.001f
-                        other.position.x = mx - vx /dv * other.hitBoxR* 1.001f
-                        other.position.y = my - vy /dv * other.hitBoxR* 1.001f
-                }
+                val vx = position.x - mid.x
+                val vy = position.y - mid.y
+                val dv = kotlin.math.sqrt(kotlin.math.abs(vx).pow(2) + kotlin.math.abs(vy).pow(2))
+
+                val e = PointF(position.y - other.position.y, other.position.x - position.x)
+                val angle = atan(e.y.toDouble() / e.x.toDouble())
+
+                val va = rotateVector(velocity, angle)
+                val vb = rotateVector(other.velocity, angle)
+                val k = 1f
+                val v1 = va.y
+                val v2 = vb.y
+                val C = (1 + k) * (mass * v1 + other.mass * v2) / (mass + other.mass)
+                va.y = C - k * v1
+                vb.y = C - k * v2
+
+                velocity = rotateVector(va, -angle)
+                other.velocity = rotateVector(vb, -angle)
+
+                position.x = mid.x + vx / dv * hitBoxR * 1.001f
+                position.y = mid.y + vy / dv * hitBoxR * 1.001f
+                other.position.x = mid.x - vx / dv * other.hitBoxR * 1.001f
+                other.position.y = mid.y - vy / dv * other.hitBoxR * 1.001f
+                return true
         }
 }

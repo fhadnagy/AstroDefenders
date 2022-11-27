@@ -40,11 +40,11 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         cnn = drawables[0] as Cannon
         walls = PointF(mScreenX.toFloat(),mScreenY.toFloat())
         drawables.add(Ball(PointF(mScreenX*.5f,mScreenY*.5f),
-            context, PointF(1f,0f), walls, 60f, 36f, 200f))
+            context, PointF(1f,0f), walls, 60f, 216f))
         drawables.add(Ball(PointF(mScreenX*.4f,mScreenY*.6f),
-            context, PointF(1f,0f), walls, 40f, 16f, 200f))
+            context, PointF(1f,0f), walls, 40f, 64f))
         drawables.add(Ball(PointF(mScreenX*.3f,mScreenY*.7f),
-            context, PointF(1f,0f), walls, 30f, 9f, 200f))
+            context, PointF(1f,0f), walls, 30f, 27f))
     }
 
 
@@ -151,8 +151,8 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             if (gameTimeMillis/500 > drawables.size){
                 Log.d("gtms","$gameTimeMillis")
 
-                drawables.add(Ball(PointF(cnn.position.x+cnn.ballStartV.x, cnn.position.y+cnn.ballStartV.y),
-                    context, cnn.ballStartV, walls, 20f, 4f, 200f))
+                drawables.add(Ball(PointF(cnn.position.x+cnn.ballStartP.x, cnn.position.y+cnn.ballStartP.y),
+                    context, cnn.ballStartV, walls, 20f, 8f))
             }
         }
 

@@ -5,17 +5,11 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PointF
 
-class Collidable (pos: PointF,context: Context): GameObject(pos,context) {
+abstract class Collidable (pos: PointF,context: Context): GameObject(pos,context) {
+    val velocity = PointF()
+    val exists = true
+    val type : Int = 0
+    var hR =1f
 
-    override fun draw(canvas: Canvas, paint: Paint) {
-        TODO("Not yet implemented")
-    }
-
-    override fun log() {
-
-    }
-
-    override fun update(millisPassed: Long, vararg plus: Float) {
-        TODO("Not yet implemented")
-    }
+    abstract fun collide(other : Collidable): Boolean
 }
