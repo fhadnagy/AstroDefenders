@@ -28,6 +28,8 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     @Volatile
     private var drawing: Boolean = false
     private var paused = false
+    private var counterA = 0
+    private var counterB = 0
     private var clickableList = ArrayList<Clickable>()
     private var drawables = ArrayList<GameObject>()
     private var collidables = ArrayList<Collidable>()
@@ -43,11 +45,11 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         cnn = drawables[0] as Cannon
         walls = PointF(mScreenX.toFloat(),mScreenY.toFloat())
         collidables.add(Astroid(PointF(mScreenX*.5f,mScreenY*.5f),
-            context, PointF(.01f,0f), 216f, 60f))
+            context, PointF(.01f,0f), 216f, 60f, walls))
         collidables.add(Astroid(PointF(mScreenX*.4f,mScreenY*.6f),
-            context, PointF(.01f,0f), 64f, 40f))
+            context, PointF(.01f,0f), 64f, 40f, walls))
         collidables.add(Astroid(PointF(mScreenX*.3f,mScreenY*.7f),
-            context, PointF(.01f,0f), 27f, 30f))
+            context, PointF(.01f,0f), 27f, 30f, walls))
     }
 
 
@@ -92,6 +94,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         paint.textSize = debugSize.toFloat()
         canvas.drawText("fps: $fps",
             10f, (debugStart + debugSize).toFloat(), paint)
+        canvas.drawText("No ${collidables.size}", 10f, (debugStart + debugSize*2f).toFloat(), paint)
 
     }
 
@@ -141,7 +144,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private fun update() {
         if(!paused){
             if (collidables.size>0){
-                for(a in 1..collidables.size-2){
+                for(a in 0..collidables.size-2){
                     for(b in a+1..collidables.size-1){
                         if(collidables[a].collides(collidables[b])){
                             collidables[a].onCollide(collidables[b])
@@ -156,13 +159,35 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             for(go in drawables){
                 go.update(msPassed,js.rotation)
             }
-            if (gameTimeMillis/500 > drawables.size){
+            for(co in collidables){
+                co.update(msPassed,js.rotation)
+            }
+            if (gameTimeMillis/2000 > counterA){
+                counterA++
                 Log.d("gtms","$gameTimeMillis")
 
-                collidables.add(Astroid(PointF(walls.x*(0.3f+random.nextFloat()*.5f), walls.x*(0.3f+random.nextFloat()*.5f)),
-                        context, PointF(random.nextFloat()*10f,20f+random.nextFloat()*30f),8f, 20f))
+                collidables.add(Astroid(PointF(walls.x*(0.2f+random.nextFloat()*.6f), walls.y*(0.02f+random.nextFloat()*.03f)),
+                        context, PointF(-3f+random.nextFloat()*6f,2f+random.nextFloat()*8f),2f, 40f, walls))
+            }
+            if (gameTimeMillis/600 > counterB){
+                counterB++
+                Log.d("gtms","$gameTimeMillis")
+
+                collidables.add(Ball(PointF(cnn.position.x+cnn.ballStartP.x,cnn.position.y+cnn.ballStartP.y ),
+                    context, cnn.ballStartV,2f, 20f, walls))
             }
         }
+
+        //deletes
+        val tempCollidables = ArrayList<Collidable>()
+        for(a in collidables){
+                if (a.exists)
+                {
+                    tempCollidables.add(a)
+                }
+        }
+        collidables= tempCollidables
+
 
     }
 

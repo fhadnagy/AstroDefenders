@@ -50,7 +50,7 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
         var aimSpeed : Float = .7f
         var ballStartV = PointF()
         var ballStartP = PointF()
-        var ballStartS = 500f
+        var ballStartS = 800f
         var aimDotN : Int = 15
         var aimLengthToCannonLength : Float = 3f
         init {
@@ -140,22 +140,22 @@ fun mirrorVectorToVector(v:PointF,e:PointF):PointF{
         return rotateVector(va,-angle)
 }
 
-class Ball(pos: PointF, context: Context, _velocity :PointF, walle : PointF, hR : Float, mss :Float) : GameObject(pos,context){
-        var velocity : PointF
-        var hitBoxR : Float
+class Ball(pos: PointF, context: Context, _velocity :PointF, mss :Float, _hR : Float, walle : PointF) : Collidable(pos,context,_velocity,_hR){
+
         var mass :Float
+        var lifetime: Long =5000
         private var wall : PointF
         private val rnd = Random(System.currentTimeMillis())
         private val colorM = Color.argb(255,rnd.nextInt(255),rnd.nextInt(255),rnd.nextInt(255))
         init {
-                hitBoxR = hR
+                type = 2
                 mass = mss
-                velocity= PointF(_velocity.x,_velocity.y)
                 wall = walle
         }
         override fun draw(canvas: Canvas, paint: Paint) {
+                if(!exists) return
                 paint.color=colorM
-                canvas.drawCircle(position.x,position.y,hitBoxR,paint)
+                canvas.drawCircle(position.x,position.y,hR,paint)
         }
 
         override fun log() {
@@ -163,72 +163,85 @@ class Ball(pos: PointF, context: Context, _velocity :PointF, walle : PointF, hR 
         }
 
         override fun update(millisPassed: Long, vararg plus: Float) {
+                if (lifetime<1){
+                        exists= false
+                }
+                if(!exists) return
                 position.x+=velocity.x*millisPassed/1000
                 position.y+=velocity.y*millisPassed/1000
 
-                        if(position.x>wall.x-hitBoxR){
-                                velocity.x *= -.9f
-                                position.x = wall.x-hitBoxR
-                        }
-                        if(position.y>wall.y-hitBoxR){
-                                velocity.y *= -.9f
-                                position.y = wall.y-hitBoxR
-                        }
-                        if(position.x<hitBoxR){
-                                velocity.x *= -.9f
-                                position.x = hitBoxR
-                        }
-                        if(position.y<hitBoxR){
-                                velocity.y *= -.9f
-                                position.y = hitBoxR
-                        }
-
+                if(position.x>wall.x-hR){
+                        velocity.x *= -.9f
+                        position.x = wall.x-hR
+                }
+                if(position.y>wall.y-hR){
+                        velocity.y *= -.9f
+                        position.y = wall.y-hR
+                }
+                if(position.x<hR){
+                        velocity.x *= -.9f
+                        position.x = hR
+                }
+                if(position.y<hR){
+                        velocity.y *= -.9f
+                        position.y = hR
+                }
+                lifetime-=millisPassed
         }
-        fun collide(other: Ball): Boolean {
+        override fun collides(oC: Collidable): Boolean {
+                if (!exists or !oC.exists){
+                        return false
+                }
                 val d = kotlin.math.sqrt(
-                        kotlin.math.abs(position.x - other.position.x).pow(2) + kotlin.math.abs(
-                                position.y - other.position.y
+                        kotlin.math.abs(position.x - oC.position.x).pow(2) + kotlin.math.abs(
+                                position.y - oC.position.y
                         ).pow(2)
                 )
 
 
-                if (hitBoxR + other.hitBoxR - 1f <= d) return false
+                if (hR + oC.hR > d) return true
 
-                /*val mid = PointF(
-                        (position.x * (other.hitBoxR + mass.pow(2)) + other.position.x * (hitBoxR + other.mass.pow(
-                                2
-                        ))) / (other.hitBoxR + hitBoxR + mass.pow(2) + other.mass.pow(2)),
-                        (position.y * (other.hitBoxR + mass.pow(2)) + other.position.y * (hitBoxR + other.mass.pow(
-                                2
-                        ))) / (other.hitBoxR + hitBoxR + mass.pow(2) + other.mass.pow(2))
-                )*/
-                val mid = PointF(
-                        (position.x * (other.hitBoxR) + other.position.x * (hitBoxR)) / (other.hitBoxR + hitBoxR),
-                        (position.y * (other.hitBoxR)+ other.position.y * (hitBoxR)) / (other.hitBoxR + hitBoxR))
+                return false
 
-                val vx = position.x - mid.x
-                val vy = position.y - mid.y
-                val dv = kotlin.math.sqrt(kotlin.math.abs(vx).pow(2) + kotlin.math.abs(vy).pow(2))
+        }
+        override fun onCollide(oC: Collidable){
+                if (oC.type==2) {
+                        val other = oC as Ball
 
-                val e = PointF(position.y - other.position.y, other.position.x - position.x)
-                val angle = atan(e.y.toDouble() / e.x.toDouble())
+                        val mid = PointF(
+                                (position.x * (other.hR) + other.position.x * (hR)) / (other.hR + hR),
+                                (position.y * (other.hR) + other.position.y * (hR)) / (other.hR + hR)
+                        )
 
-                val va = rotateVector(velocity, angle)
-                val vb = rotateVector(other.velocity, angle)
-                val k = 1f
-                val v1 = va.y
-                val v2 = vb.y
-                val C = (1 + k) * (mass * v1 + other.mass * v2) / (mass + other.mass)
-                va.y = C - k * v1
-                vb.y = C - k * v2
+                        val vx = position.x - mid.x
+                        val vy = position.y - mid.y
+                        val dv = kotlin.math.sqrt(
+                                kotlin.math.abs(vx).pow(2) + kotlin.math.abs(vy).pow(2)
+                        )
 
-                velocity = rotateVector(va, -angle)
-                other.velocity = rotateVector(vb, -angle)
+                        val e = PointF(position.y - other.position.y, other.position.x - position.x)
+                        val angle = atan(e.y.toDouble() / e.x.toDouble())
 
-                position.x = mid.x + vx / dv * hitBoxR * 1.001f
-                position.y = mid.y + vy / dv * hitBoxR * 1.001f
-                other.position.x = mid.x - vx / dv * other.hitBoxR * 1.001f
-                other.position.y = mid.y - vy / dv * other.hitBoxR * 1.001f
-                return true
+                        val va = rotateVector(velocity, angle)
+                        val vb = rotateVector(other.velocity, angle)
+                        val k = 1f
+                        val v1 = va.y
+                        val v2 = vb.y
+                        val C = (1 + k) * (mass * v1 + other.mass * v2) / (mass + other.mass)
+                        va.y = C - k * v1
+                        vb.y = C - k * v2
+
+                        velocity = rotateVector(va, -angle)
+                        other.velocity = rotateVector(vb, -angle)
+
+                        position.x = mid.x + vx / dv * hR * 1.001f
+                        position.y = mid.y + vy / dv * hR * 1.001f
+                        other.position.x = mid.x - vx / dv * other.hR * 1.001f
+                        other.position.y = mid.y - vy / dv * other.hR * 1.001f
+                }else if(oC.type==1){
+                        exists= false
+                        val other = oC as Astroid
+                        other.hp-=1
+                }
         }
 }
