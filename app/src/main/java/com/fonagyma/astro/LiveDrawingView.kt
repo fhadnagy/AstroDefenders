@@ -10,6 +10,7 @@ import android.view.SurfaceView
 import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 @SuppressLint("ViewConstructor")
 class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceView(context) , Runnable{
@@ -29,9 +30,11 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private var paused = false
     private var clickableList = ArrayList<Clickable>()
     private var drawables = ArrayList<GameObject>()
+    private var collidables = ArrayList<Collidable>()
     private var js : Joystick
     private var cnn : Cannon
     private var pseRect = RectF(10f,10f,100f,100f)
+    private val random = Random(System.currentTimeMillis())
     ///var mP= PointF(mScreenX.toFloat()/2,mScreenY.toFloat()/2)
     init {
         clickableList.add(Joystick(PointF(mScreenX*.6f,mScreenY*.7f),RectF(mScreenX*.6f,mScreenY*.7f,mScreenX-5f,mScreenY-5f),context))
@@ -39,12 +42,12 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         js = clickableList[0] as Joystick
         cnn = drawables[0] as Cannon
         walls = PointF(mScreenX.toFloat(),mScreenY.toFloat())
-        drawables.add(Ball(PointF(mScreenX*.5f,mScreenY*.5f),
-            context, PointF(1f,0f), walls, 60f, 216f))
-        drawables.add(Ball(PointF(mScreenX*.4f,mScreenY*.6f),
-            context, PointF(1f,0f), walls, 40f, 64f))
-        drawables.add(Ball(PointF(mScreenX*.3f,mScreenY*.7f),
-            context, PointF(1f,0f), walls, 30f, 27f))
+        collidables.add(Astroid(PointF(mScreenX*.5f,mScreenY*.5f),
+            context, PointF(.01f,0f), 216f, 60f))
+        collidables.add(Astroid(PointF(mScreenX*.4f,mScreenY*.6f),
+            context, PointF(.01f,0f), 64f, 40f))
+        collidables.add(Astroid(PointF(mScreenX*.3f,mScreenY*.7f),
+            context, PointF(.01f,0f), 27f, 30f))
     }
 
 
@@ -65,6 +68,9 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             }
             for(go in drawables){
                 go.draw(canvas,paint)
+            }
+            for (co in collidables){
+                co.draw(canvas,paint)
             }
 
 
@@ -134,14 +140,16 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
 
     private fun update() {
         if(!paused){
-            if (drawables.size>0){
-                for(a in 1..drawables.size-2){
-                    for(b in a+1..drawables.size-1){
-                        (drawables[a] as Ball).collide(drawables[b] as Ball)
+            if (collidables.size>0){
+                for(a in 1..collidables.size-2){
+                    for(b in a+1..collidables.size-1){
+                        if(collidables[a].collides(collidables[b])){
+                            collidables[a].onCollide(collidables[b])
+                        }
                     }
                 }
             }
-            for(a in 1..drawables.size-2)
+
             for (cl in clickableList){
                 cl.update(msPassed)
             }
@@ -151,8 +159,8 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             if (gameTimeMillis/500 > drawables.size){
                 Log.d("gtms","$gameTimeMillis")
 
-                drawables.add(Ball(PointF(cnn.position.x+cnn.ballStartP.x, cnn.position.y+cnn.ballStartP.y),
-                    context, cnn.ballStartV, walls, 20f, 8f))
+                collidables.add(Astroid(PointF(walls.x*(0.3f+random.nextFloat()*.5f), walls.x*(0.3f+random.nextFloat()*.5f)),
+                        context, PointF(random.nextFloat()*10f,20f+random.nextFloat()*30f),8f, 20f))
             }
         }
 
