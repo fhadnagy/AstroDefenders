@@ -3,6 +3,7 @@ package com.fonagyma.astro
 import android.content.Context
 import android.graphics.*
 import android.util.Log
+import kotlin.contracts.contract
 import kotlin.math.atan
 import kotlin.math.pow
 import kotlin.random.Random
@@ -12,18 +13,19 @@ abstract class Collidable (pos: PointF,context: Context, _velocity : PointF, _hR
     var exists = true
     var type : Int = 0
     var hR = _hR
+    var pointsOnDestruction : Int = 0
+    var destroyed = false
     abstract fun collides(oC : Collidable): Boolean
     abstract fun onCollide(oC: Collidable)
 }
 
-class Astroid(pos: PointF,context: Context, _velocity : PointF, _mass: Float, _hR : Float, walle : PointF) : Collidable(pos, context, _velocity, _hR){
+class Asteroid(pos: PointF, context: Context, _velocity : PointF, _mass: Float, _hR : Float, walle : PointF) : Collidable(pos, context, _velocity, _hR){
     var omega = 50f
-    val mxhp : Int = 3
-    var hp : Int = 3
+    val mxhp : Int = 14
+    var hp : Int = 14
     var mass :Float
     val random = Random(System.currentTimeMillis())
     private var wall : PointF
-
     init {
         type = 1
         omega = random.nextFloat()*30f-60f
@@ -31,19 +33,17 @@ class Astroid(pos: PointF,context: Context, _velocity : PointF, _mass: Float, _h
         sizeY=.01f*hR
         mass= _mass
         wall = walle
+        pointsOnDestruction = 5
 
-        imageR= R.drawable.astroid0
+        imageR= R.drawable.astroid1
         imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
         Log.d("inf","${imageBitmap.height} ${imageBitmap.width} ")
 
-        cP= PointF(imageBitmap.width*(.48f)-imageBitmap.width/2f,imageBitmap.height*(.49f)-imageBitmap.height/2f)
+        cP= PointF(imageBitmap.width*(.49f)-imageBitmap.width/2f,imageBitmap.height*(.53f)-imageBitmap.height/2f)
     }
-
-
     override fun log() {
         TODO("Not yet implemented")
     }
-
     override fun draw(canvas: Canvas, paint: Paint) {
         if(!exists) return
         //paint.color=Color.argb(255,255,0,0)
@@ -60,15 +60,16 @@ class Astroid(pos: PointF,context: Context, _velocity : PointF, _mass: Float, _h
 
         paint.color=Color.argb(255,255,0,0)
 
-        paint.style= Paint.Style.STROKE
+        /*paint.style= Paint.Style.STROKE
         canvas.drawCircle(position.x,position.y,hR,paint)
-        paint.style= Paint.Style.FILL_AND_STROKE
+    */
+        paint.style= Paint.Style.FILL
         paint.color=Color.argb(255,255,0,0)
 
-        canvas.drawRect(position.x-hR,position.y-hR*1.4f,position.x+hR,position.y-hR*1.2f,paint)
+        canvas.drawRect(position.x-hR,position.y-hR*1.4f,position.x+hR,position.y-hR*1.1f,paint)
         paint.color=Color.argb(255,0,255,0)
 
-        canvas.drawRect(position.x-hR,position.y-hR*1.4f,position.x+2*hR*(-.5f+hp.toFloat()/mxhp.toFloat()),position.y-hR*1.2f,paint)
+        canvas.drawRect(position.x-hR,position.y-hR*1.4f,position.x+2*hR*(-.5f+hp.toFloat()/mxhp.toFloat()),position.y-hR*1.1f,paint)
 
 
         /*paint.color=Color.argb(255,255,0,0)
@@ -78,9 +79,11 @@ class Astroid(pos: PointF,context: Context, _velocity : PointF, _mass: Float, _h
         canvas.drawLine(position.x+myB.width/2, position.y+myB.height/2,
         position.x+myB.width/2+c.x, position.y+myB.height/2+c.y, paint)*/
     }
-
     override fun update(millisPassed: Long, vararg plus: Float) {
-        if (hp<=0) exists= false
+        if (hp<=0) {
+            exists= false
+            destroyed = true
+        }
         if(!exists) return
         //omega *= 1f-.05f *(millisPassed/1000f)
         turn += omega *(millisPassed/1000f)
@@ -110,7 +113,6 @@ class Astroid(pos: PointF,context: Context, _velocity : PointF, _mass: Float, _h
             position.y = hR
         }*/
     }
-
     override fun collides(oC: Collidable): Boolean {
         if (!exists or !oC.exists){
             return false
@@ -124,11 +126,10 @@ class Astroid(pos: PointF,context: Context, _velocity : PointF, _mass: Float, _h
 
         return false
     }
-
     override fun onCollide(oC: Collidable) {
         if (oC.type == 1)
         {
-            val other= oC as Astroid
+            val other= oC as Asteroid
             val d = kotlin.math.sqrt(
                 kotlin.math.abs(position.x - other.position.x).pow(2) + kotlin.math.abs(
                     position.y - other.position.y
@@ -172,9 +173,187 @@ class Astroid(pos: PointF,context: Context, _velocity : PointF, _mass: Float, _h
             other.position.y = mid.y - vy / dv * other.hR * 1.001f
 
         }else if(oC.type==2){
-            hp-=1
+            val bll = oC as Ball
+            hp-=bll.damage
             oC.exists= false
+            oC.destroyed = true
+        }else if(oC.type == 3)
+        {
+            val exp = oC as Explosion
+            if (exp.active)
+            {
+                hp-=exp.damage
+
+            }
         }
 
+    }
+}
+
+class Ball(pos: PointF, context: Context, _velocity :PointF, mss :Float, _hR : Float, walle : PointF) : Collidable(pos,context,_velocity,_hR){
+
+    var mass :Float
+    var lifetime: Long =5000
+    private var wall : PointF
+    var damage = 2
+    private val rnd = Random(System.currentTimeMillis())
+    private val colorM = Color.argb(255,100+rnd.nextInt(155),100+rnd.nextInt(155),100+rnd.nextInt(155))
+    init {
+        type = 2
+        mass = mss
+        wall = walle
+    }
+    override fun draw(canvas: Canvas, paint: Paint) {
+        if(!exists) return
+        paint.color=colorM
+        canvas.drawCircle(position.x,position.y,hR,paint)
+    }
+    override fun log() {
+        TODO("Not yet implemented")
+    }
+    override fun update(millisPassed: Long, vararg plus: Float) {
+        if (lifetime<1){
+            exists= false
+        }
+        if(!exists) return
+        position.x+=velocity.x*millisPassed/1000
+        position.y+=velocity.y*millisPassed/1000
+
+        if(position.x>wall.x-hR){
+            velocity.x *= -.9f
+            position.x = wall.x-hR
+        }
+        if(position.y>wall.y-hR){
+            velocity.y *= -.9f
+            position.y = wall.y-hR
+        }
+        if(position.x<hR){
+            velocity.x *= -.9f
+            position.x = hR
+        }
+        if(position.y<hR){
+            velocity.y *= -.9f
+            position.y = hR
+        }
+        lifetime-=millisPassed
+    }
+    override fun collides(oC: Collidable): Boolean {
+        if (!exists or !oC.exists){
+            return false
+        }
+        val d = kotlin.math.sqrt(
+            kotlin.math.abs(position.x - oC.position.x).pow(2) + kotlin.math.abs(
+                position.y - oC.position.y
+            ).pow(2)
+        )
+
+
+        if (hR + oC.hR > d) return true
+
+        return false
+
+    }
+    override fun onCollide(oC: Collidable){
+        if (oC.type==2) {
+            val other = oC as Ball
+
+            val mid = PointF(
+                (position.x * (other.hR) + other.position.x * (hR)) / (other.hR + hR),
+                (position.y * (other.hR) + other.position.y * (hR)) / (other.hR + hR)
+            )
+
+            val vx = position.x - mid.x
+            val vy = position.y - mid.y
+            val dv = kotlin.math.sqrt(
+                kotlin.math.abs(vx).pow(2) + kotlin.math.abs(vy).pow(2)
+            )
+
+            val e = PointF(position.y - other.position.y, other.position.x - position.x)
+            val angle = atan(e.y.toDouble() / e.x.toDouble())
+
+            val va = rotateVector(velocity, angle)
+            val vb = rotateVector(other.velocity, angle)
+            val k = 1f
+            val v1 = va.y
+            val v2 = vb.y
+            val C = (1 + k) * (mass * v1 + other.mass * v2) / (mass + other.mass)
+            va.y = C - k * v1
+            vb.y = C - k * v2
+
+            velocity = rotateVector(va, -angle)
+            other.velocity = rotateVector(vb, -angle)
+
+            position.x = mid.x + vx / dv * hR * 1.001f
+            position.y = mid.y + vy / dv * hR * 1.001f
+            other.position.x = mid.x - vx / dv * other.hR * 1.001f
+            other.position.y = mid.y - vy / dv * other.hR * 1.001f
+        }else if(oC.type==1){
+            exists= false
+            destroyed = true
+            val other = oC as Asteroid
+            other.hp-=damage
+        }else if(oC.type == 3)
+        {
+            val exp = oC as Explosion
+            if (exp.active){
+                exists= false
+                destroyed = true
+            }
+
+        }
+    }
+}
+
+class Explosion(pos: PointF, context: Context, _velocity :PointF, _hR : Float, dmg: Int) : Collidable(pos,context,_velocity,_hR){
+    var lifetime: Long =50
+    var damage = 10
+    var active = true
+    private val rnd = Random(System.currentTimeMillis())
+    private val colorM = Color.argb(255,100+rnd.nextInt(155),100+rnd.nextInt(155),100+rnd.nextInt(155))
+    init {
+        type = 3
+        damage= dmg
+    }
+    override fun draw(canvas: Canvas, paint: Paint) {
+        if(!exists) return
+        paint.color=Color.argb(255,255,200,10)
+        canvas.drawCircle(position.x,position.y,hR,paint)
+    }
+    override fun log() {
+        TODO("Not yet implemented")
+    }
+    override fun update(millisPassed: Long, vararg plus: Float) {
+        if (lifetime<1){
+            exists= false
+        }
+        active = false
+        if(!exists) return
+
+        lifetime-=millisPassed
+    }
+    override fun collides(oC: Collidable): Boolean {
+        if (!exists or !oC.exists){
+            return false
+        }
+
+        val d = kotlin.math.sqrt(
+            kotlin.math.abs(position.x - oC.position.x).pow(2) + kotlin.math.abs(
+                position.y - oC.position.y
+            ).pow(2)
+        )
+
+        if (hR + oC.hR > d) return true
+
+        return false
+
+    }
+    override fun onCollide(oC: Collidable){
+        if (oC.type==2 && active) {
+            oC.exists = false
+            oC.destroyed = true
+        }else if(oC.type==1 && active){
+            val other = oC as Asteroid
+            other.hp-=damage
+        }
     }
 }

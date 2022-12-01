@@ -19,7 +19,7 @@ class Joystick(pos: PointF, hitBox : RectF,context: Context) : Clickable(pos, hi
     var padRadius : Float = 140f
     var margin = 5f
     var cursorRadius: Float
-    var showHitbox = true
+    var showHitbox = false
     var rotation = 0f
     init {
         //cursorRadius = (hitBox.bottom-hitBox.top)/3f

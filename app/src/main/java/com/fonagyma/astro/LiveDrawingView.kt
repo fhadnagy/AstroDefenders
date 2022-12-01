@@ -7,9 +7,6 @@ import android.graphics.*
 import android.util.Log
 import android.view.MotionEvent
 import android.view.SurfaceView
-import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 @SuppressLint("ViewConstructor")
@@ -37,48 +34,79 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private var cnn : Cannon
     private var pseRect = RectF(10f,10f,100f,100f)
     private val random = Random(System.currentTimeMillis())
+    private var score :Int = 0
     ///var mP= PointF(mScreenX.toFloat()/2,mScreenY.toFloat()/2)
     init {
-        clickableList.add(Joystick(PointF(mScreenX*.6f,mScreenY*.7f),RectF(mScreenX*.6f,mScreenY*.7f,mScreenX-5f,mScreenY-5f),context))
-        drawables.add(Cannon(PointF(mScreenX*.3f,mScreenY*.9f),context))
+        clickableList.add(Joystick(PointF(mScreenX*.5f,mScreenY*.7f),RectF(mScreenX*.5f,mScreenY*.7f,mScreenX-5f,mScreenY-5f),context))
+        drawables.add(Cannon(PointF(mScreenX*.3f,mScreenY*.8f),context))
         js = clickableList[0] as Joystick
         cnn = drawables[0] as Cannon
         walls = PointF(mScreenX.toFloat(),mScreenY.toFloat())
-        collidables.add(Astroid(PointF(mScreenX*.5f,mScreenY*.5f),
+        pseRect = RectF(walls.x-120f,20f,walls.x-20f, 120f)
+        //test asteroids
+        /*collidables.add(Astroid(PointF(mScreenX*.5f,mScreenY*.5f),
             context, PointF(.01f,0f), 216f, 60f, walls))
         collidables.add(Astroid(PointF(mScreenX*.4f,mScreenY*.6f),
             context, PointF(.01f,0f), 64f, 40f, walls))
         collidables.add(Astroid(PointF(mScreenX*.3f,mScreenY*.7f),
-            context, PointF(.01f,0f), 27f, 30f, walls))
+            context, PointF(.01f,0f), 27f, 30f, walls))*/
     }
-
-
     private fun draw(){
         if (holder.surface.isValid){
             // Lock the canvas (graphics memory) ready to draw
             canvas = holder.lockCanvas()
             // Fill the screen with a solid color
-            canvas.drawColor(Color.argb(255, 25, 15, 0))
+            canvas.drawColor(Color.argb(255, 75, 75, 152))
             // Choose a color to paint with
             paint.color = Color.argb(255, 25, 255, 25)
             // Choose the font size
             paint.textSize = fontSize.toFloat()
-            // Draw the particle systems
+            // Draw what needs drawing
             for (cl in clickableList)
             {
                 cl.draw(canvas,paint)
             }
-            for(go in drawables){
-                go.draw(canvas,paint)
-            }
+
             for (co in collidables){
                 co.draw(canvas,paint)
             }
+
+            for(go in drawables){
+                go.draw(canvas,paint)
+            }
+
+            paint.color=Color.argb(255,255,0,0)
+
+            paint.style= Paint.Style.STROKE
+            canvas.drawRect(pseRect, paint)
+            paint.style= Paint.Style.FILL
+            paint.strokeWidth=6f
+
+            if (!paused){
+                canvas.drawRect(pseRect.left+pseRect.width()*.25f,pseRect.top+pseRect.height()*.2f,
+                    pseRect.right-pseRect.width()*.6f, pseRect.bottom-pseRect.height()*.2f,paint)
+                canvas.drawRect(pseRect.left+pseRect.width()*.6f,pseRect.top+pseRect.height()*.2f,
+                    pseRect.right-pseRect.width()*.25f, pseRect.bottom-pseRect.height()*.2f,paint)
+                paint.color=Color.argb(255,255,0,0)
+            }else{
+                canvas.drawLine(pseRect.left+pseRect.width()*.3f,pseRect.top+pseRect.height()*.2f,pseRect.right-pseRect.width()*.2f, pseRect.bottom-pseRect.height()*.5f,paint)
+                canvas.drawLine(pseRect.left+pseRect.width()*.3f,pseRect.top+pseRect.height()*.8f,pseRect.right-pseRect.width()*.2f, pseRect.bottom-pseRect.height()*.5f,paint)
+                canvas.drawLine(pseRect.left+pseRect.width()*.3f,pseRect.top+pseRect.height()*.2f,pseRect.left+pseRect.width()*.3f,pseRect.top+pseRect.height()*.8f,paint)
+
+            }
+
+            paint.strokeWidth=2f
+
 
 
             if (debugging) {
                 printDebuggingText()
             }
+
+            paint.color = Color.argb(255,25,255,25)
+            paint.textSize = 40f
+            canvas.drawText("<$score>",
+                walls.x-120f, 160f, paint)
 
             // Display the drawing on screen
             // unlockCanvasAndPost is a
@@ -86,7 +114,6 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             holder.unlockCanvasAndPost(canvas)
         }
     }
-
     private fun printDebuggingText() {
         val debugSize = fontSize / 2
         val debugStart = 150
@@ -97,7 +124,6 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         canvas.drawText("No ${collidables.size}", 10f, (debugStart + debugSize*2f).toFloat(), paint)
 
     }
-
     override fun run() {
         // The drawing Boolean gives us finer control
         // rather than just relying on the calls to run
@@ -113,6 +139,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             }else{
                 msPassed = 0
             }
+            //getting millis passed as a more accurate time state instead of relying on fps
             prevFrameMillis = frameStartTime
             gameTimeMillis+=msPassed
 
@@ -140,7 +167,6 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
 
         }
     }
-
     private fun update() {
         if(!paused){
             if (collidables.size>0){
@@ -162,14 +188,14 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             for(co in collidables){
                 co.update(msPassed,js.rotation)
             }
-            if (gameTimeMillis/2000 > counterA){
+            if (gameTimeMillis/800 > counterA){
                 counterA++
                 Log.d("gtms","$gameTimeMillis")
 
-                collidables.add(Astroid(PointF(walls.x*(0.2f+random.nextFloat()*.6f), walls.y*(0.02f+random.nextFloat()*.03f)),
-                        context, PointF(-3f+random.nextFloat()*6f,2f+random.nextFloat()*8f),2f, 40f, walls))
+                collidables.add(Asteroid(PointF(walls.x*(0.2f+random.nextFloat()*.6f), walls.y*(0.02f+random.nextFloat()*.03f)),
+                        context, PointF(-1f+random.nextFloat()*2f,2f+random.nextFloat()*2f),2f, 40f, walls))
             }
-            if (gameTimeMillis/600 > counterB){
+            if (gameTimeMillis/400 > counterB){
                 counterB++
                 Log.d("gtms","$gameTimeMillis")
 
@@ -184,13 +210,18 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                 if (a.exists)
                 {
                     tempCollidables.add(a)
+                }else if(a.destroyed){
+                    score+= a.pointsOnDestruction
+                    if (a.type==2)
+                    {
+                        tempCollidables.add(Explosion(a.position,context, PointF(0f,0f),200f,5))
+                    }
                 }
         }
         collidables= tempCollidables
 
 
     }
-
     fun pause() {
         // Set drawing to false
         // Stopping the thread isn't
@@ -206,7 +237,6 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         prevFrameMillis=0
 
     }
-
     fun resume() {
         drawing = true
         // Initialize the instance of Thread
@@ -214,8 +244,6 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         // Start the thread
         thread.start()
     }
-
-
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(
         motionEvent: MotionEvent
