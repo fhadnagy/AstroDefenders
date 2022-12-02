@@ -22,6 +22,9 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private val fontSize: Int = mScreenX /15
     private lateinit var thread: Thread
     private val walls : PointF
+    private var hp : Int
+    private var hpmax : Int
+    private var earthH : Float = .9f
     @Volatile
     private var drawing: Boolean = false
     private var paused = false
@@ -42,6 +45,8 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         js = clickableList[0] as Joystick
         cnn = drawables[0] as Cannon
         walls = PointF(mScreenX.toFloat(),mScreenY.toFloat())
+        hpmax = 50
+        hp = hpmax
         pseRect = RectF(walls.x-120f,20f,walls.x-20f, 120f)
         //test asteroids
         /*collidables.add(Astroid(PointF(mScreenX*.5f,mScreenY*.5f),
@@ -61,6 +66,8 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             paint.color = Color.argb(255, 25, 255, 25)
             // Choose the font size
             paint.textSize = fontSize.toFloat()
+
+            canvas.drawLine(0f,walls.y*earthH,walls.x,walls.y*earthH,paint)
             // Draw what needs drawing
             for (cl in clickableList)
             {
@@ -107,6 +114,9 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             paint.textSize = 40f
             canvas.drawText("<$score>",
                 walls.x-120f, 160f, paint)
+            paint.color = Color.argb(255,255,25,25)
+            canvas.drawText("<$hp>/<$hpmax>",
+                20f, 60f, paint)
 
             // Display the drawing on screen
             // unlockCanvasAndPost is a
@@ -199,8 +209,8 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                 counterB++
                 Log.d("gtms","$gameTimeMillis")
 
-                collidables.add(Ball(PointF(cnn.position.x+cnn.ballStartP.x,cnn.position.y+cnn.ballStartP.y ),
-                    context, cnn.ballStartV,2f, 20f, walls))
+                collidables.add(Rocket(PointF(cnn.position.x+cnn.ballStartP.x,cnn.position.y+cnn.ballStartP.y ),
+                    context, cnn.ballStartV,20f, walls,2, cnn.rotation))
             }
         }
 
@@ -209,10 +219,18 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         for(a in collidables){
                 if (a.exists)
                 {
-                    tempCollidables.add(a)
+
+                    if (a.type==1 && a.position.y>walls.y*earthH)
+                    {
+                        a.exists = false
+                        val astr = a as Asteroid
+                        hp-= astr.hp
+                    }else{
+                        tempCollidables.add(a)
+                    }
                 }else if(a.destroyed){
                     score+= a.pointsOnDestruction
-                    if (a.type==2)
+                    if (a.type==2 || a.type==4)
                     {
                         tempCollidables.add(Explosion(a.position,context, PointF(0f,0f),200f,5))
                     }
