@@ -5,8 +5,6 @@ import android.graphics.*
 import android.util.Log
 import java.lang.Math.*
 import kotlin.math.atan
-import kotlin.math.pow
-import kotlin.random.Random
 
 abstract class GameObject(pos: PointF, context: Context){
 
@@ -48,9 +46,9 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
         var rotation : Float = 0f
         var millisSinceStart: Long= 0
         var aimSpeed : Float = .7f
-        var ballStartV = PointF()
-        var ballStartP = PointF()
-        var ballStartS = 800f
+        var rocketStartV = PointF()
+        var rocketStartP = PointF()
+        var rocketStartS = 800f
         var aimDotN : Int = 15
         var aimLengthToCannonLength : Float = 3f
         init {
@@ -72,11 +70,11 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
                 }else{
                         0f
                 }
-                ballStartP= rotateVector(PointF(0f,-imageBitmap.height.toFloat()*.8f),-rotation/180f* PI)
-                ballStartV= rotateVector(PointF(0f,-1f), -rotation/180f* PI)
-                ballStartV.x*=ballStartS
-                ballStartV.y*=ballStartS
-                Log.d("cannon  ","${ballStartV.x} ${ballStartV.y}")
+                rocketStartP= rotateVector(PointF(0f,-imageBitmap.height.toFloat()*.8f),-rotation/180f* PI)
+                rocketStartV= rotateVector(PointF(0f,-1f), -rotation/180f* PI)
+                rocketStartV.x*=rocketStartS
+                rocketStartV.y*=rocketStartS
+                Log.d("cannon  ","${rocketStartV.x} ${rocketStartV.y}")
                 //sizeY= 2f+sin(millisSinceStart.toDouble()/1000f*2* PI).toFloat()
                 //sizeX= 2f+sin(millisSinceStart.toDouble()/1000f*2* PI).toFloat()
         }

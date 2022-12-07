@@ -21,6 +21,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private val millisInSecond: Long = 1000
     private val fontSize: Int = mScreenX /15
     private lateinit var thread: Thread
+    private var gameOver = false
     private val walls : PointF
     private var hp : Int
     private var hpmax : Int
@@ -36,18 +37,41 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private var js : Joystick
     private var cnn : Cannon
     private var pseRect = RectF(10f,10f,100f,100f)
+    private var tryAgainRect = RectF(10f,10f,100f,100f)
+    private var highScore = 0
     private val random = Random(System.currentTimeMillis())
     private var score :Int = 0
+
+    private var asteroidInterval : Long = 1000
+    private var rocketInterval : Long = 800
+    private var currencyING : Int = 0
+    private var rocketSize : Float = .5f
+    private var rocketDamage : Float = 1f
+    private var expRadius : Float = 2f
+    private var expDamage : Float = 5f
+    private var rocketSpeed : Float = 1f
+    private var rocketInaccuracy : Float = 2f
+
+    private var rocketSizeBase : Float = 20f
+    private var rocketDamageBase : Float = 2f
+    private var expRadiusBase : Float = 50f
+    private var expDamgeBase :  Float = 1f
+    private var rocketSpeedBase : Float = 400f
+    private var rocketInaccuracyBase : Float = 5f
+
     ///var mP= PointF(mScreenX.toFloat()/2,mScreenY.toFloat()/2)
     init {
-        clickableList.add(Joystick(PointF(mScreenX*.5f,mScreenY*.7f),RectF(mScreenX*.5f,mScreenY*.7f,mScreenX-5f,mScreenY-5f),context))
+
+        clickableList.add(Joystick(PointF(mScreenX*.4f,mScreenY*.5f),RectF(mScreenX*.4f,mScreenY*.5f,mScreenX-5f,mScreenY-5f),context))
         drawables.add(Cannon(PointF(mScreenX*.3f,mScreenY*.8f),context))
         js = clickableList[0] as Joystick
         cnn = drawables[0] as Cannon
+        cnn.rocketStartS = rocketSpeedBase*rocketSpeed
         walls = PointF(mScreenX.toFloat(),mScreenY.toFloat())
-        hpmax = 50
+        hpmax = 5
         hp = hpmax
         pseRect = RectF(walls.x-120f,20f,walls.x-20f, 120f)
+        tryAgainRect = RectF(20f,20f,220f, 220f)
         //test asteroids
         /*collidables.add(Astroid(PointF(mScreenX*.5f,mScreenY*.5f),
             context, PointF(.01f,0f), 216f, 60f, walls))
@@ -57,9 +81,10 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             context, PointF(.01f,0f), 27f, 30f, walls))*/
     }
     private fun draw(){
-        if (holder.surface.isValid){
+        if (holder.surface.isValid) {
             // Lock the canvas (graphics memory) ready to draw
             canvas = holder.lockCanvas()
+            if(!gameOver){
             // Fill the screen with a solid color
             canvas.drawColor(Color.argb(255, 75, 75, 152))
             // Choose a color to paint with
@@ -67,42 +92,69 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             // Choose the font size
             paint.textSize = fontSize.toFloat()
 
-            canvas.drawLine(0f,walls.y*earthH,walls.x,walls.y*earthH,paint)
+            canvas.drawLine(0f, walls.y * earthH, walls.x, walls.y * earthH, paint)
             // Draw what needs drawing
-            for (cl in clickableList)
-            {
-                cl.draw(canvas,paint)
+            for (cl in clickableList) {
+                cl.draw(canvas, paint)
             }
 
-            for (co in collidables){
-                co.draw(canvas,paint)
+            for (co in collidables) {
+                co.draw(canvas, paint)
             }
 
-            for(go in drawables){
-                go.draw(canvas,paint)
+            for (go in drawables) {
+                go.draw(canvas, paint)
             }
 
-            paint.color=Color.argb(255,255,0,0)
+            paint.color = Color.argb(255, 255, 0, 0)
 
-            paint.style= Paint.Style.STROKE
+            paint.style = Paint.Style.STROKE
             canvas.drawRect(pseRect, paint)
-            paint.style= Paint.Style.FILL
-            paint.strokeWidth=6f
+            paint.style = Paint.Style.FILL
+            paint.strokeWidth = 6f
 
-            if (!paused){
-                canvas.drawRect(pseRect.left+pseRect.width()*.25f,pseRect.top+pseRect.height()*.2f,
-                    pseRect.right-pseRect.width()*.6f, pseRect.bottom-pseRect.height()*.2f,paint)
-                canvas.drawRect(pseRect.left+pseRect.width()*.6f,pseRect.top+pseRect.height()*.2f,
-                    pseRect.right-pseRect.width()*.25f, pseRect.bottom-pseRect.height()*.2f,paint)
-                paint.color=Color.argb(255,255,0,0)
-            }else{
-                canvas.drawLine(pseRect.left+pseRect.width()*.3f,pseRect.top+pseRect.height()*.2f,pseRect.right-pseRect.width()*.2f, pseRect.bottom-pseRect.height()*.5f,paint)
-                canvas.drawLine(pseRect.left+pseRect.width()*.3f,pseRect.top+pseRect.height()*.8f,pseRect.right-pseRect.width()*.2f, pseRect.bottom-pseRect.height()*.5f,paint)
-                canvas.drawLine(pseRect.left+pseRect.width()*.3f,pseRect.top+pseRect.height()*.2f,pseRect.left+pseRect.width()*.3f,pseRect.top+pseRect.height()*.8f,paint)
+            if (!paused) {
+                canvas.drawRect(
+                    pseRect.left + pseRect.width() * .25f,
+                    pseRect.top + pseRect.height() * .2f,
+                    pseRect.right - pseRect.width() * .6f,
+                    pseRect.bottom - pseRect.height() * .2f,
+                    paint
+                )
+                canvas.drawRect(
+                    pseRect.left + pseRect.width() * .6f,
+                    pseRect.top + pseRect.height() * .2f,
+                    pseRect.right - pseRect.width() * .25f,
+                    pseRect.bottom - pseRect.height() * .2f,
+                    paint
+                )
+                paint.color = Color.argb(255, 255, 0, 0)
+            } else {
+                canvas.drawLine(
+                    pseRect.left + pseRect.width() * .3f,
+                    pseRect.top + pseRect.height() * .2f,
+                    pseRect.right - pseRect.width() * .2f,
+                    pseRect.bottom - pseRect.height() * .5f,
+                    paint
+                )
+                canvas.drawLine(
+                    pseRect.left + pseRect.width() * .3f,
+                    pseRect.top + pseRect.height() * .8f,
+                    pseRect.right - pseRect.width() * .2f,
+                    pseRect.bottom - pseRect.height() * .5f,
+                    paint
+                )
+                canvas.drawLine(
+                    pseRect.left + pseRect.width() * .3f,
+                    pseRect.top + pseRect.height() * .2f,
+                    pseRect.left + pseRect.width() * .3f,
+                    pseRect.top + pseRect.height() * .8f,
+                    paint
+                )
 
             }
 
-            paint.strokeWidth=2f
+            paint.strokeWidth = 2f
 
 
 
@@ -110,13 +162,62 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                 printDebuggingText()
             }
 
-            paint.color = Color.argb(255,25,255,25)
+            paint.color = Color.argb(255, 25, 255, 25)
             paint.textSize = 40f
-            canvas.drawText("<$score>",
-                walls.x-120f, 160f, paint)
-            paint.color = Color.argb(255,255,25,25)
-            canvas.drawText("<$hp>/<$hpmax>",
-                20f, 60f, paint)
+            canvas.drawText(
+                "<$score>",
+                walls.x - 120f, 160f, paint
+            )
+            paint.color = Color.argb(255, 255, 25, 25)
+            canvas.drawText(
+                "<$hp>/<$hpmax>",
+                20f, 60f, paint
+            )
+        }else{
+                canvas.drawColor(Color.argb(255, 75, 75, 152))
+                // Choose a color to paint with
+                paint.color = Color.argb(255, 25, 255, 25)
+                // Choose the font size
+                paint.textSize = fontSize.toFloat()
+
+                canvas.drawRect(tryAgainRect, paint)
+                val matrix = Matrix()
+                matrix.preScale(.4f,.4f)
+                val bbbb= BitmapFactory.decodeResource(context.resources,R.drawable.again)
+                canvas.drawBitmap( Bitmap.createBitmap(bbbb,0,0,bbbb.height,bbbb.width,matrix,true),  20f,20f,paint)
+
+                paint.color = Color.argb(255, 255, 75, 75)
+                paint.textSize = 80f
+                paint.strokeWidth = 20f
+
+                canvas.drawText(
+                    "GAME OVER",
+                    walls.x/2f - 220f, walls.y/2f-100f, paint
+                )
+
+                paint.textSize = 40f
+                paint.strokeWidth = 6f
+
+                paint.color = Color.argb(255, 255, 255, 25)
+
+                canvas.drawText(
+                    "Highscore(Prev): <$highScore>",
+                    walls.x/2f - 220f, walls.y/2f, paint
+                )
+
+                paint.color = Color.argb(255, 25, 255, 25)
+
+                canvas.drawText(
+                    "Your Score: <$score>",
+                    walls.x/2f - 220f, walls.y/2f+100f, paint
+                )
+
+
+                paint.strokeWidth = 8f
+                paint.textSize = fontSize.toFloat()
+
+
+            }
 
             // Display the drawing on screen
             // unlockCanvasAndPost is a
@@ -132,6 +233,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         canvas.drawText("fps: $fps",
             10f, (debugStart + debugSize).toFloat(), paint)
         canvas.drawText("No ${collidables.size}", 10f, (debugStart + debugSize*2f).toFloat(), paint)
+        canvas.drawText("time: ${gameTimeMillis/1000}", 10f, (debugStart + debugSize*3f).toFloat(), paint)
 
     }
     override fun run() {
@@ -152,6 +254,11 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             //getting millis passed as a more accurate time state instead of relying on fps
             prevFrameMillis = frameStartTime
             gameTimeMillis+=msPassed
+
+            if (gameOver){
+                msPassed=0
+                gameTimeMillis=0
+            }
 
             // Provided the app isn't paused
             // call the update function
@@ -176,9 +283,10 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             }
 
         }
+
     }
     private fun update() {
-        if(!paused){
+        if(!paused && !gameOver){
             if (collidables.size>0){
                 for(a in 0..collidables.size-2){
                     for(b in a+1..collidables.size-1){
@@ -198,21 +306,20 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             for(co in collidables){
                 co.update(msPassed,js.rotation)
             }
-            if (gameTimeMillis/800 > counterA){
+            if (gameTimeMillis/asteroidInterval > counterA){
                 counterA++
                 Log.d("gtms","$gameTimeMillis")
 
                 collidables.add(Asteroid(PointF(walls.x*(0.2f+random.nextFloat()*.6f), walls.y*(0.02f+random.nextFloat()*.03f)),
-                        context, PointF(-1f+random.nextFloat()*2f,2f+random.nextFloat()*2f),2f, 40f, walls))
+                        context, PointF(-1f+random.nextFloat()*2f,2f+random.nextFloat()*2f),2f, 40f, walls,5))
             }
-            if (gameTimeMillis/400 > counterB){
+            if (gameTimeMillis/rocketInterval > counterB){
                 counterB++
                 Log.d("gtms","$gameTimeMillis")
 
-                collidables.add(Rocket(PointF(cnn.position.x+cnn.ballStartP.x,cnn.position.y+cnn.ballStartP.y ),
-                    context, cnn.ballStartV,20f, walls,2, cnn.rotation))
+                collidables.add(Rocket(PointF(cnn.position.x+cnn.rocketStartP.x,cnn.position.y+cnn.rocketStartP.y ),
+                    context, cnn.rocketStartV,rocketSize*rocketSizeBase, walls,(rocketDamageBase*rocketDamage).toInt(), cnn.rotation,rocketInaccuracyBase*rocketInaccuracy*rocketSpeed))
             }
-        }
 
         //deletes
         val tempCollidables = ArrayList<Collidable>()
@@ -232,11 +339,17 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                     score+= a.pointsOnDestruction
                     if (a.type==2 || a.type==4)
                     {
-                        tempCollidables.add(Explosion(a.position,context, PointF(0f,0f),200f,5))
+                        tempCollidables.add(Explosion(a.position,context, PointF(0f,0f),expRadius*expRadiusBase,(expDamgeBase*expDamage).toInt()))
                     }
                 }
         }
         collidables= tempCollidables
+
+            if (hp<1)
+            {
+                gameOver=true
+            }
+        }
 
 
     }
@@ -275,10 +388,13 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         // Did the user touch the screen
         if (motionEvent.action and MotionEvent.ACTION_MASK ==
             MotionEvent.ACTION_DOWN) {
-            for (cl in clickableList) {
-                if(cl.hitBox.contains(motionEvent.x,motionEvent.y))
-                {
-                    cl.onClick(PointF(motionEvent.x,motionEvent.y))
+            if(!paused && !gameOver)
+            {
+                for (cl in clickableList) {
+                    if(cl.hitBox.contains(motionEvent.x,motionEvent.y))
+                    {
+                        cl.onClick(PointF(motionEvent.x,motionEvent.y))
+                    }
                 }
             }
             if(pseRect.contains(motionEvent.x,motionEvent.y)){
@@ -290,6 +406,20 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                     paused=true
                     pause()
                 }
+            }
+            if(gameOver && tryAgainRect.contains(motionEvent.x,motionEvent.y)){
+                hp = hpmax
+                if (score> highScore)
+                {
+                    highScore = score
+                }
+                prevFrameMillis=0
+                score =0
+                counterA = 0
+                counterB = 0
+                collidables.clear()
+                gameOver = false
+
             }
         }
         return true

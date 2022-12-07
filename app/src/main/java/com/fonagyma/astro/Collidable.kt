@@ -20,10 +20,10 @@ abstract class Collidable (pos: PointF,context: Context, _velocity : PointF, _hR
     abstract fun onCollide(oC: Collidable)
 }
 
-class Asteroid(pos: PointF, context: Context, _velocity : PointF, _mass: Float, _hR : Float, walle : PointF) : Collidable(pos, context, _velocity, _hR){
+class Asteroid(pos: PointF, context: Context, _velocity : PointF, _mass: Float, _hR : Float, walle : PointF, _mxhp: Int) : Collidable(pos, context, _velocity, _hR){
     var omega = 50f
-    val mxhp : Int = 14
-    var hp : Int = 14
+    var mxhp : Int = 5
+    var hp : Int
     var mass :Float
     val random = Random(System.currentTimeMillis())
     private var wall : PointF
@@ -34,7 +34,9 @@ class Asteroid(pos: PointF, context: Context, _velocity : PointF, _mass: Float, 
         sizeY=.01f*hR
         mass= _mass
         wall = walle
-        pointsOnDestruction = 5
+        mxhp=_mxhp
+        hp=mxhp
+        pointsOnDestruction = mxhp
 
         imageR= R.drawable.astroid1
         imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
@@ -63,7 +65,7 @@ class Asteroid(pos: PointF, context: Context, _velocity : PointF, _mass: Float, 
 
         /*paint.style= Paint.Style.STROKE
         canvas.drawCircle(position.x,position.y,hR,paint)
-    */
+        */
         paint.style= Paint.Style.FILL
         paint.color=Color.argb(255,255,0,0)
 
@@ -72,13 +74,6 @@ class Asteroid(pos: PointF, context: Context, _velocity : PointF, _mass: Float, 
 
         canvas.drawRect(position.x-hR,position.y-hR*1.4f,position.x+2*hR*(-.5f+hp.toFloat()/mxhp.toFloat()),position.y-hR*1.1f,paint)
 
-
-        /*paint.color=Color.argb(255,255,0,0)
-        canvas.drawLine(position.x,position.y,position.x+myB.width/2,
-        position.y+myB.height/2,paint)
-        paint.color=Color.argb(255,255,255,0)
-        canvas.drawLine(position.x+myB.width/2, position.y+myB.height/2,
-        position.x+myB.width/2+c.x, position.y+myB.height/2+c.y, paint)*/
     }
     override fun update(millisPassed: Long, vararg plus: Float) {
         if (hp<=0) {
@@ -328,12 +323,35 @@ class Explosion(pos: PointF, context: Context, _velocity :PointF, _hR : Float, d
     private val colorM = Color.argb(255,100+rnd.nextInt(155),100+rnd.nextInt(155),100+rnd.nextInt(155))
     init {
         type = 3
+        sizeX=.013f*hR
+        sizeY=.013f*hR
+        turn = rnd.nextFloat()*360f
+        imageR= R.drawable.exp
+        imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
+
+        cP= PointF(imageBitmap.width*(.40f)-imageBitmap.width/2f,imageBitmap.height*(.43f)-imageBitmap.height/2f)
+
         damage= dmg
     }
     override fun draw(canvas: Canvas, paint: Paint) {
         if(!exists) return
-        paint.color=Color.argb(255,255,200,10)
+
+
+        val matrix = Matrix()
+        matrix.preRotate(turn)
+        matrix.preScale(sizeX,sizeY)
+        val myB = Bitmap.createBitmap(imageBitmap,0, 0, imageBitmap.width, imageBitmap.height, matrix, true)
+
+        val c = rotateVector(PointF(cP.x*sizeX,cP.y*sizeY),-turn/180f* Math.PI)
+        canvas.drawBitmap(myB,position.x-myB.width/2-c.x,position.y-myB.height/2-c.y,paint)
+
+        paint.color=Color.argb(255,255,0,0)
+
+        paint.style= Paint.Style.STROKE
         canvas.drawCircle(position.x,position.y,hR,paint)
+
+        paint.style= Paint.Style.FILL
+
     }
     override fun log() {
         TODO("Not yet implemented")
@@ -378,16 +396,18 @@ class Explosion(pos: PointF, context: Context, _velocity :PointF, _hR : Float, d
     }
 }
 
-class Rocket(pos: PointF, context: Context, _velocity : PointF, _hR : Float, walle : PointF,dmg: Int, _turn: Float) : Collidable(pos, context, _velocity, _hR){
+class Rocket(pos: PointF, context: Context, _velocity : PointF, _hR : Float, walle : PointF,dmg: Int, _turn: Float, _iAc:Float) : Collidable(pos, context, _velocity, _hR){
     val random = Random(System.currentTimeMillis())
     var lifetime : Long = 0
+    var inaccuracy : Float
     private var wall : PointF
     var damage = 10
     init {
         type = 4
-        sizeX=.03f*hR
-        sizeY=.03f*hR
+        sizeX=.025f*hR
+        sizeY=.025f*hR
         wall = walle
+        inaccuracy = _iAc
         damage=dmg
         turn=_turn
         imageR= R.drawable.rocket
@@ -414,8 +434,8 @@ class Rocket(pos: PointF, context: Context, _velocity : PointF, _hR : Float, wal
 
         paint.color=Color.argb(255,255,0,0)
 
-        //paint.style= Paint.Style.STROKE
-        //canvas.drawCircle(position.x,position.y,hR,paint)
+        paint.style= Paint.Style.STROKE
+        canvas.drawCircle(position.x,position.y,hR,paint)
 
         paint.style= Paint.Style.FILL
         paint.color=Color.argb(255,255,0,0)
@@ -430,9 +450,9 @@ class Rocket(pos: PointF, context: Context, _velocity : PointF, _hR : Float, wal
     }
     override fun update(millisPassed: Long, vararg plus: Float) {
         if(!exists) return
-        if(lifetime>300){
-            lifetime-=300
-            val temp : Float =(-.5f +  random.nextFloat())*30f
+        if(lifetime>150){
+            lifetime-=150
+            val temp : Float =(-.5f +  random.nextFloat())*inaccuracy
             turn += temp
             velocity = rotateVector(velocity,-temp/180f*PI)
         }
