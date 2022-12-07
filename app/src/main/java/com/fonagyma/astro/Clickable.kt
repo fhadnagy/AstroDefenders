@@ -10,6 +10,60 @@ abstract class Clickable(pos: PointF, rect: RectF,context: Context) : GameObject
     abstract fun onClick(p : PointF)
 }
 
+class CounterButton(pos: PointF, hitBox : RectF,context: Context,_ImageR: Int,_x:Float,_y:Float,_ctrStart:Float,_icrA:Float) : Clickable(pos, hitBox,context){
+
+    var midP = PointF((hitBox.left+hitBox.right)/2,(hitBox.bottom+hitBox.top)/2)
+    var strokeWidth = 5f
+    var showHitbox = true
+    var incrAmonunt = 1f
+    var counter = 1f
+    init {
+        sizeX = _x
+        sizeY = _y
+        counter = _ctrStart
+        incrAmonunt = _icrA
+        imageR= _ImageR
+        imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
+        Log.d("inf","${imageBitmap.height} ${imageBitmap.width} ")
+
+        cP= PointF(imageBitmap.width*(.50f)-imageBitmap.width/2f,imageBitmap.height*(.5f)-imageBitmap.height/2f)
+
+    }
+    override fun log() {
+        TODO("Not yet implemented")
+    }
+
+    override fun onClick(p: PointF) {
+        counter+=incrAmonunt
+    }
+
+    override fun update(millisPassed: Long, vararg plus: Float) {
+        return
+    }
+
+    override fun draw(canvas: Canvas, paint: Paint) {
+        val matrix = Matrix()
+        matrix.preScale(sizeX,sizeY)
+        val myB = Bitmap.createBitmap(imageBitmap,0, 0, imageBitmap.width, imageBitmap.height, matrix, true)
+
+        val c = rotateVector(PointF(cP.x*sizeX,cP.y*sizeY),-turn/180f* Math.PI)
+        canvas.drawBitmap(myB,midP.x-myB.width/2-c.x,midP.y-myB.height/2-c.y,paint)
+
+        paint.color=Color.argb(255,255,255,0)
+        paint.textSize= hitBox.height()/3f
+        canvas.drawText("$counter",midP.x-30f,midP.y,paint)
+        if (showHitbox){
+            paint.color= Color.argb(255,255,255,0)
+            paint.strokeWidth=strokeWidth
+            paint.style=Paint.Style.STROKE
+            canvas.drawRect(hitBox,paint)
+            paint.style=Paint.Style.FILL
+
+        }
+    }
+
+}
+
 class Joystick(pos: PointF, hitBox : RectF,context: Context) : Clickable(pos, hitBox,context){
     var midP = PointF((hitBox.left+hitBox.right)/2,(hitBox.bottom+hitBox.top)/2)
     var cursorP : PointF = PointF(midP.x,midP.y)

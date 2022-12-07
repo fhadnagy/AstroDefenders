@@ -450,8 +450,8 @@ class Rocket(pos: PointF, context: Context, _velocity : PointF, _hR : Float, wal
     }
     override fun update(millisPassed: Long, vararg plus: Float) {
         if(!exists) return
-        if(lifetime>150){
-            lifetime-=150
+        if(lifetime>50){
+            lifetime-=50
             val temp : Float =(-.5f +  random.nextFloat())*inaccuracy
             turn += temp
             velocity = rotateVector(velocity,-temp/180f*PI)

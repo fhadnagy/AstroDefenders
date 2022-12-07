@@ -7,6 +7,7 @@ import android.graphics.*
 import android.util.Log
 import android.view.MotionEvent
 import android.view.SurfaceView
+import kotlin.math.pow
 import kotlin.random.Random
 
 @SuppressLint("ViewConstructor")
@@ -43,21 +44,23 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private var score :Int = 0
 
     private var asteroidInterval : Long = 1000
+    private var asteroidHpBase : Int = 1
     private var rocketInterval : Long = 800
     private var currencyING : Int = 0
+
     private var rocketSize : Float = .5f
     private var rocketDamage : Float = 1f
-    private var expRadius : Float = 2f
-    private var expDamage : Float = 5f
+    private var expRadius : Float = 1f
+    private var expDamage : Float = 1f
     private var rocketSpeed : Float = 1f
-    private var rocketInaccuracy : Float = 2f
+    private var rocketInaccuracy : Float = 0f
 
     private var rocketSizeBase : Float = 20f
-    private var rocketDamageBase : Float = 2f
-    private var expRadiusBase : Float = 50f
+    private var rocketDamageBase : Float = 1f
+    private var expRadiusBase : Float = 40f
     private var expDamgeBase :  Float = 1f
-    private var rocketSpeedBase : Float = 400f
-    private var rocketInaccuracyBase : Float = 5f
+    private var rocketSpeedBase : Float = 300f
+    private var rocketInaccuracyBase : Float = 1f
 
     ///var mP= PointF(mScreenX.toFloat()/2,mScreenY.toFloat()/2)
     init {
@@ -68,7 +71,12 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         cnn = drawables[0] as Cannon
         cnn.rocketStartS = rocketSpeedBase*rocketSpeed
         walls = PointF(mScreenX.toFloat(),mScreenY.toFloat())
-        hpmax = 5
+        clickableList.add(CounterButton(PointF(mScreenX*.05f,mScreenY*.5f+(0*120f)),RectF(mScreenX*.05f,mScreenY*.5f+(0*120f),mScreenX*.05f+100f,mScreenY*.5f+100f+(0*120f)),context,R.drawable.rs_btn,.4f,.4f,rocketSpeed,.5f))
+        clickableList.add(CounterButton(PointF(mScreenX*.05f,mScreenY*.5f+(1*120f)),RectF(mScreenX*.05f,mScreenY*.5f+(1*120f),mScreenX*.05f+100f,mScreenY*.5f+100f+(1*120f)),context,R.drawable.rd_btn,.4f,.4f,rocketDamage,1f))
+        clickableList.add(CounterButton(PointF(mScreenX*.05f,mScreenY*.5f+(2*120f)),RectF(mScreenX*.05f,mScreenY*.5f+(2*120f),mScreenX*.05f+100f,mScreenY*.5f+100f+(2*120f)),context,R.drawable.ed_btn,.4f,.4f,expDamage,1f))
+        clickableList.add(CounterButton(PointF(mScreenX*.05f,mScreenY*.5f+(3*120f)),RectF(mScreenX*.05f,mScreenY*.5f+(3*120f),mScreenX*.05f+100f,mScreenY*.5f+100f+(3*120f)),context,R.drawable.er_btn,.4f,.4f,expRadius,.1f))
+
+        hpmax = 50
         hp = hpmax
         pseRect = RectF(walls.x-120f,20f,walls.x-20f, 120f)
         tryAgainRect = RectF(20f,20f,220f, 220f)
@@ -234,6 +242,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             10f, (debugStart + debugSize).toFloat(), paint)
         canvas.drawText("No ${collidables.size}", 10f, (debugStart + debugSize*2f).toFloat(), paint)
         canvas.drawText("time: ${gameTimeMillis/1000}", 10f, (debugStart + debugSize*3f).toFloat(), paint)
+        canvas.drawText("A: ${counterA}", 10f, (debugStart + debugSize*4f).toFloat(), paint)
 
     }
     override fun run() {
@@ -286,6 +295,11 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
 
     }
     private fun update() {
+        rocketSpeed=(clickableList[1] as CounterButton).counter
+        rocketDamage=(clickableList[2] as CounterButton).counter
+        expDamage=(clickableList[3] as CounterButton).counter
+        expRadius=(clickableList[4] as CounterButton).counter
+        cnn.rocketStartS=rocketSpeedBase*rocketSpeed
         if(!paused && !gameOver){
             if (collidables.size>0){
                 for(a in 0..collidables.size-2){
@@ -311,14 +325,14 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                 Log.d("gtms","$gameTimeMillis")
 
                 collidables.add(Asteroid(PointF(walls.x*(0.2f+random.nextFloat()*.6f), walls.y*(0.02f+random.nextFloat()*.03f)),
-                        context, PointF(-1f+random.nextFloat()*2f,2f+random.nextFloat()*2f),2f, 40f, walls,5))
+                        context, PointF(-1f+random.nextFloat()*2f,2f+random.nextFloat()*2f),2f, 40f, walls,asteroidHpBase*(counterA/10 + 1)))
             }
             if (gameTimeMillis/rocketInterval > counterB){
                 counterB++
                 Log.d("gtms","$gameTimeMillis")
 
                 collidables.add(Rocket(PointF(cnn.position.x+cnn.rocketStartP.x,cnn.position.y+cnn.rocketStartP.y ),
-                    context, cnn.rocketStartV,rocketSize*rocketSizeBase, walls,(rocketDamageBase*rocketDamage).toInt(), cnn.rotation,rocketInaccuracyBase*rocketInaccuracy*rocketSpeed))
+                    context, cnn.rocketStartV,rocketSize*rocketSizeBase, walls,(rocketDamageBase*rocketDamage).toInt(), cnn.rotation,rocketInaccuracyBase*rocketInaccuracy*rocketSpeed.pow(2)))
             }
 
         //deletes
@@ -417,6 +431,10 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                 score =0
                 counterA = 0
                 counterB = 0
+                (clickableList[1] as CounterButton).counter = 1f
+                (clickableList[2] as CounterButton).counter= 1f
+                (clickableList[3] as CounterButton).counter= 1f
+                (clickableList[4] as CounterButton).counter= 1f
                 collidables.clear()
                 gameOver = false
 
