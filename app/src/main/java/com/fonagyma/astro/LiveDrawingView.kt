@@ -24,6 +24,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private lateinit var thread: Thread
     private var gameOver = false
     private val walls : PointF
+    private var prevHp : Int
     private var hp : Int
     private var hpmax : Int
     private var earthH : Float = .9f
@@ -46,6 +47,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private var asteroidInterval : Long = 1000
     private var asteroidHpBase : Int = 1
     private var rocketInterval : Long = 800
+    private var reloadSpeed : Float = 1f
     private var currencyING : Int = 0
 
     private var rocketSize : Float = .5f
@@ -61,6 +63,9 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private var expDamgeBase :  Float = 1f
     private var rocketSpeedBase : Float = 300f
     private var rocketInaccuracyBase : Float = 1f
+    private var btnHeight = 10f
+    private var buttonMargin = 20f
+    private var buttonStartPos= PointF()
 
     ///var mP= PointF(mScreenX.toFloat()/2,mScreenY.toFloat()/2)
     init {
@@ -71,14 +76,21 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         cnn = drawables[0] as Cannon
         cnn.rocketStartS = rocketSpeedBase*rocketSpeed
         walls = PointF(mScreenX.toFloat(),mScreenY.toFloat())
-        clickableList.add(CounterButton(PointF(mScreenX*.05f,mScreenY*.5f+(0*120f)),RectF(mScreenX*.05f,mScreenY*.5f+(0*120f),mScreenX*.05f+100f,mScreenY*.5f+100f+(0*120f)),context,R.drawable.rs_btn,.4f,.4f,rocketSpeed,.5f))
-        clickableList.add(CounterButton(PointF(mScreenX*.05f,mScreenY*.5f+(1*120f)),RectF(mScreenX*.05f,mScreenY*.5f+(1*120f),mScreenX*.05f+100f,mScreenY*.5f+100f+(1*120f)),context,R.drawable.rd_btn,.4f,.4f,rocketDamage,1f))
-        clickableList.add(CounterButton(PointF(mScreenX*.05f,mScreenY*.5f+(2*120f)),RectF(mScreenX*.05f,mScreenY*.5f+(2*120f),mScreenX*.05f+100f,mScreenY*.5f+100f+(2*120f)),context,R.drawable.ed_btn,.4f,.4f,expDamage,1f))
-        clickableList.add(CounterButton(PointF(mScreenX*.05f,mScreenY*.5f+(3*120f)),RectF(mScreenX*.05f,mScreenY*.5f+(3*120f),mScreenX*.05f+100f,mScreenY*.5f+100f+(3*120f)),context,R.drawable.er_btn,.4f,.4f,expRadius,.1f))
+        btnHeight= walls.y/18
+        buttonMargin= walls.y/80
+        buttonStartPos.x= walls.x-btnHeight-buttonMargin
+        buttonStartPos.y= 0f+buttonMargin
+
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(0*(buttonMargin+btnHeight))),RectF(buttonStartPos.x,buttonStartPos.y+(0*(buttonMargin+btnHeight)),buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(0*(buttonMargin+btnHeight))),context,R.drawable.rs_btn,.4f,.4f,rocketSpeed,.5f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(1*(buttonMargin+btnHeight))),RectF(buttonStartPos.x,buttonStartPos.y+(1*(buttonMargin+btnHeight)),buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(1*(buttonMargin+btnHeight))),context,R.drawable.rd_btn,.4f,.4f,rocketDamage,1f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(2*(buttonMargin+btnHeight))),RectF(buttonStartPos.x,buttonStartPos.y+(2*(buttonMargin+btnHeight)),buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(2*(buttonMargin+btnHeight))),context,R.drawable.ed_btn,.4f,.4f,expDamage,1f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))),RectF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight)),buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(3*(buttonMargin+btnHeight))),context,R.drawable.er_btn,.4f,.4f,expRadius,.1f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))),RectF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight)),buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(3*(buttonMargin+btnHeight))),context,R.drawable.er_btn,.4f,.4f,reloadSpeed,.1f))
 
         hpmax = 50
         hp = hpmax
-        pseRect = RectF(walls.x-120f,20f,walls.x-20f, 120f)
+        prevHp = hpmax
+        pseRect = RectF(buttonMargin,buttonMargin,btnHeight+buttonMargin, btnHeight+buttonMargin)
         tryAgainRect = RectF(20f,20f,220f, 220f)
         //test asteroids
         /*collidables.add(Astroid(PointF(mScreenX*.5f,mScreenY*.5f),
@@ -164,11 +176,6 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
 
             paint.strokeWidth = 2f
 
-
-
-            if (debugging) {
-                printDebuggingText()
-            }
 
             paint.color = Color.argb(255, 25, 255, 25)
             paint.textSize = 40f
@@ -423,6 +430,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             }
             if(gameOver && tryAgainRect.contains(motionEvent.x,motionEvent.y)){
                 hp = hpmax
+                prevHp = hpmax
                 if (score> highScore)
                 {
                     highScore = score
