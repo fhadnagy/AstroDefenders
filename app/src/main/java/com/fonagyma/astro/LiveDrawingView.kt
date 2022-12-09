@@ -91,7 +91,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(4*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(4*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(4*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.reload_speed,.4f,.4f,reloadSpeed,.125f))
         clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(5*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(5*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(5*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.accuracy,.4f,.4f,rocketInaccuracy,.125f))
 
-        hpmax = 5
+        hpmax = 50
         hp = hpmax
         prevHp = hpmax
         pseRect = RectF(buttonMargin,buttonMargin,btnHeight+buttonMargin, btnHeight+buttonMargin)
