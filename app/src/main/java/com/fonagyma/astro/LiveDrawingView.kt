@@ -7,7 +7,9 @@ import android.graphics.*
 import android.util.Log
 import android.view.MotionEvent
 import android.view.SurfaceView
+import androidx.core.view.marginBottom
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 @SuppressLint("ViewConstructor")
@@ -44,25 +46,26 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private val random = Random(System.currentTimeMillis())
     private var score :Int = 0
 
-    private var asteroidInterval : Long = 1000
+    private var hpToMoney = 5f
+    private var asteroidInterval : Long = 1400
     private var asteroidHpBase : Int = 1
     private var rocketInterval : Long = 800
     private var reloadSpeed : Float = 1f
     private var currencyING : Int = 100
 
-    private var rocketSize : Float = .5f
+    private var rocketSize : Float = 1f
     private var rocketDamage : Float = 1f
     private var expRadius : Float = 1f
     private var expDamage : Float = 1f
     private var rocketSpeed : Float = 1f
-    private var rocketInaccuracy : Float = 0f
+    private var rocketInaccuracy : Float = 1f
 
-    private var rocketSizeBase : Float = 20f
+    private var rocketSizeBase : Float = 12f
     private var rocketDamageBase : Float = 1f
     private var expRadiusBase : Float = 40f
     private var expDamgeBase :  Float = 1f
     private var rocketSpeedBase : Float = 300f
-    private var rocketInaccuracyBase : Float = 1f
+    private var rocketInaccuracyBase : Float = 2f
     private var btnHeight = 10f
     private var buttonMargin = 20f
     private var buttonStartPos= PointF()
@@ -81,17 +84,19 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         buttonStartPos.x= walls.x-btnHeight-buttonMargin
         buttonStartPos.y= 0f+buttonMargin
 
-        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(0*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(0*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(0*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.rs_btn,.4f,.4f,rocketSpeed,.5f))
-        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(1*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(1*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(1*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.rd_btn,.4f,.4f,rocketDamage,1f))
-        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(2*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(2*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(2*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.ed_btn,.4f,.4f,expDamage,1f))
-        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(3*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.er_btn,.4f,.4f,expRadius,.1f))
-        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(3*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.er_btn,.4f,.4f,reloadSpeed,.1f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(0*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(0*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(0*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.rocket_speed,.4f,.4f,rocketSpeed,.25f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(1*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(1*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(1*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.rocket_damage,.4f,.4f,rocketDamage,1f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(2*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(2*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(2*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.explosion_damage,.4f,.4f,expDamage,1f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(3*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.explosion_radius,.4f,.4f,expRadius,.5f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(4*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(4*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(4*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.reload_speed,.4f,.4f,reloadSpeed,.125f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(5*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(5*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(5*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.accuracy,.4f,.4f,rocketInaccuracy,.125f))
 
-        hpmax = 50
+        hpmax = 5
         hp = hpmax
         prevHp = hpmax
         pseRect = RectF(buttonMargin,buttonMargin,btnHeight+buttonMargin, btnHeight+buttonMargin)
-        tryAgainRect = RectF(20f,20f,220f, 220f)
+        tryAgainRect = RectF(buttonMargin,buttonMargin,btnHeight*2+buttonMargin, btnHeight*2+buttonMargin)
+
         //test asteroids
         /*collidables.add(Astroid(PointF(mScreenX*.5f,mScreenY*.5f),
             context, PointF(.01f,0f), 216f, 60f, walls))
@@ -106,7 +111,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             canvas = holder.lockCanvas()
             if(!gameOver){
             // Fill the screen with a solid color
-            canvas.drawColor(Color.argb(255, 75, 75, 152))
+            canvas.drawColor(Color.argb(255, 50, 50, 150))
             // Choose a color to paint with
             paint.color = Color.argb(255, 25, 255, 25)
             // Choose the font size
@@ -190,7 +195,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                  buttonMargin, (earthH+1f)/2f*walls.y+buttonMargin, paint
             )
                 paint.textSize = buttonMargin*2
-                paint.color = Color.argb(255, 0, 153, 255)
+                paint.color = Color.argb(255, 0, 255, 255)
             canvas.drawText(
                 "$currencyING",
                 walls.x-buttonMargin*3-btnHeight, buttonMargin*2, paint
@@ -205,7 +210,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
 
                 canvas.drawRect(tryAgainRect, paint)
                 val matrix = Matrix()
-                matrix.preScale(.4f,.4f)
+                matrix.preScale(btnHeight/100f*.4f,btnHeight/100f*.4f)
                 val bbbb= BitmapFactory.decodeResource(context.resources,R.drawable.again)
                 canvas.drawBitmap( Bitmap.createBitmap(bbbb,0,0,bbbb.height,bbbb.width,matrix,true),  20f,20f,paint)
 
@@ -320,6 +325,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         rocketDamage=(clickableList[2] as CounterButton).counter
         expDamage=(clickableList[3] as CounterButton).counter
         expRadius=(clickableList[4] as CounterButton).counter
+        reloadSpeed=(clickableList[5] as CounterButton).counter
         cnn.rocketStartS=rocketSpeedBase*rocketSpeed
         if(!paused && !gameOver){
             if (collidables.size>0){
@@ -348,12 +354,12 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                 collidables.add(Asteroid(PointF(walls.x*(0.2f+random.nextFloat()*.6f), walls.y*(0.02f+random.nextFloat()*.03f)),
                         context, PointF(-1f+random.nextFloat()*2f,2f+random.nextFloat()*2f),2f, 40f, walls,asteroidHpBase*(counterA/10 + 1)))
             }
-            if (gameTimeMillis/rocketInterval > counterB){
+            if ((gameTimeMillis*reloadSpeed).toLong()/rocketInterval > counterB){
                 counterB++
                 Log.d("gtms","$gameTimeMillis")
 
                 collidables.add(Rocket(PointF(cnn.position.x+cnn.rocketStartP.x,cnn.position.y+cnn.rocketStartP.y ),
-                    context, cnn.rocketStartV,rocketSize*rocketSizeBase, walls,(rocketDamageBase*rocketDamage).toInt(), cnn.rotation,rocketInaccuracyBase*rocketInaccuracy*rocketSpeed.pow(2)))
+                    context, cnn.rocketStartV,rocketSize*rocketSizeBase, walls,(rocketDamageBase*rocketDamage).toInt(), cnn.rotation,rocketInaccuracyBase/rocketInaccuracy*rocketSpeed))
             }
 
         //deletes
@@ -372,6 +378,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                     }
                 }else if(a.destroyed){
                     score+= a.pointsOnDestruction
+                    currencyING+= (a.pointsOnDestruction*hpToMoney).roundToInt()
                     if (a.type==2 || a.type==4)
                     {
                         tempCollidables.add(Explosion(a.position,context, PointF(0f,0f),expRadius*expRadiusBase,(expDamgeBase*expDamage).toInt()))
@@ -455,12 +462,16 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                 }
                 prevFrameMillis=0
                 score =0
+                currencyING = 0
                 counterA = 0
                 counterB = 0
-                (clickableList[1] as CounterButton).counter = 1f
-                (clickableList[2] as CounterButton).counter= 1f
-                (clickableList[3] as CounterButton).counter= 1f
-                (clickableList[4] as CounterButton).counter= 1f
+                (clickableList[1] as CounterButton).reset()
+                (clickableList[2] as CounterButton).reset()
+                (clickableList[3] as CounterButton).reset()
+                (clickableList[4] as CounterButton).reset()
+                (clickableList[5] as CounterButton).reset()
+                (clickableList[6] as CounterButton).reset()
+
                 collidables.clear()
                 gameOver = false
 

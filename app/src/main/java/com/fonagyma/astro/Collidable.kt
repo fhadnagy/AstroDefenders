@@ -347,8 +347,8 @@ class Explosion(pos: PointF, context: Context, _velocity :PointF, _hR : Float, d
 
         paint.color=Color.argb(255,255,0,0)
 
-        paint.style= Paint.Style.STROKE
-        canvas.drawCircle(position.x,position.y,hR,paint)
+        //paint.style= Paint.Style.STROKE
+        //canvas.drawCircle(position.x,position.y,hR,paint)
 
         paint.style= Paint.Style.FILL
 
@@ -404,17 +404,17 @@ class Rocket(pos: PointF, context: Context, _velocity : PointF, _hR : Float, wal
     var damage = 10
     init {
         type = 4
-        sizeX=.025f*hR
-        sizeY=.025f*hR
+        sizeX=.032f*hR
+        sizeY=.032f*hR
         wall = walle
         inaccuracy = _iAc
         damage=dmg
         turn=_turn
-        imageR= R.drawable.rocket
+        imageR= R.drawable.rcketwflame
         imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
         Log.d("inf","${imageBitmap.height} ${imageBitmap.width} ")
 
-        cP= PointF(imageBitmap.width*(.50f)-imageBitmap.width/2f,imageBitmap.height*(.13f)-imageBitmap.height/2f)
+        cP= PointF(imageBitmap.width*(.50f)-imageBitmap.width/2f,imageBitmap.height*(.10f)-imageBitmap.height/2f)
     }
     override fun log() {
         TODO("Not yet implemented")
@@ -434,8 +434,8 @@ class Rocket(pos: PointF, context: Context, _velocity : PointF, _hR : Float, wal
 
         paint.color=Color.argb(255,255,0,0)
 
-        paint.style= Paint.Style.STROKE
-        canvas.drawCircle(position.x,position.y,hR,paint)
+        //paint.style= Paint.Style.STROKE
+        //canvas.drawCircle(position.x,position.y,hR,paint)
 
         paint.style= Paint.Style.FILL
         paint.color=Color.argb(255,255,0,0)

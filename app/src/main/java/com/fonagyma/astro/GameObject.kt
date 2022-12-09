@@ -97,7 +97,7 @@ class Cannon(pos: PointF, context: Context) : GameObject(pos,context){
                         for(a in 1..aimDotN){
                                 val ratio : Float = (a-1+timeRatio)/aimDotN.toFloat()
                                 val k= PointF(position.x+v.x*ratio,position.y+v.y*ratio)
-                                canvas.drawCircle(k.x,k.y,15f*(1-ratio)+5,paint)
+                                canvas.drawCircle(k.x,k.y,8f*(1-ratio)+3f,paint)
 
                         }
                 }else{

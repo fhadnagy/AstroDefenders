@@ -15,19 +15,21 @@ class CounterButton(pos: PointF, hitBox : RectF,context: Context,_ImageR: Int,_x
 
     var midP = PointF((hitBox.left+hitBox.right)/2,(hitBox.bottom+hitBox.top)/2)
     var strokeWidth = 5f
-    var showHitbox = true
+    var showHitbox = false
     var incrAmonunt = 1f
     var upgradeCount : Int = 0
     var counter = 1f
+    var ctstart = 0f
     var margin = 0f
     init {
         upgradecost= 20
         sizeX = _x
         sizeY = _y
         margin = hitBox.height()/20f
-        sizeY *= hitBox.height()/100f
-        sizeX *= hitBox.height()/100f
+        sizeY *= hitBox.height()/120f
+        sizeX *= hitBox.height()/120f
         counter = _ctrStart
+        ctstart = _ctrStart
         incrAmonunt = _icrA
         imageR= _ImageR
         imageBitmap = BitmapFactory.decodeResource(context.resources,imageR)
@@ -38,6 +40,11 @@ class CounterButton(pos: PointF, hitBox : RectF,context: Context,_ImageR: Int,_x
     }
     override fun log() {
         TODO("Not yet implemented")
+    }
+    fun reset(){
+        counter = ctstart
+        upgradeCount = 0
+        upgradecost = 20
     }
 
     override fun onClick(p: PointF) {
@@ -61,6 +68,8 @@ class CounterButton(pos: PointF, hitBox : RectF,context: Context,_ImageR: Int,_x
         paint.color=Color.argb(255,255,255,0)
         paint.textSize= hitBox.height()/3f
         canvas.drawText("$upgradeCount",hitBox.left+margin,hitBox.bottom-margin,paint)
+        paint.color=Color.argb(255,0,255,255)
+        canvas.drawText("$upgradecost",hitBox.left+margin,hitBox.top+paint.textSize,paint)
         if (showHitbox){
             paint.color= Color.argb(255,255,255,0)
             paint.strokeWidth=strokeWidth
