@@ -27,7 +27,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private var prevHp : Int
     private var hp : Int
     private var hpmax : Int
-    private var earthH : Float = .9f
+    private var earthH : Float = .95f
     @Volatile
     private var drawing: Boolean = false
     private var paused = false
@@ -48,7 +48,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
     private var asteroidHpBase : Int = 1
     private var rocketInterval : Long = 800
     private var reloadSpeed : Float = 1f
-    private var currencyING : Int = 0
+    private var currencyING : Int = 100
 
     private var rocketSize : Float = .5f
     private var rocketDamage : Float = 1f
@@ -81,11 +81,11 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         buttonStartPos.x= walls.x-btnHeight-buttonMargin
         buttonStartPos.y= 0f+buttonMargin
 
-        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(0*(buttonMargin+btnHeight))),RectF(buttonStartPos.x,buttonStartPos.y+(0*(buttonMargin+btnHeight)),buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(0*(buttonMargin+btnHeight))),context,R.drawable.rs_btn,.4f,.4f,rocketSpeed,.5f))
-        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(1*(buttonMargin+btnHeight))),RectF(buttonStartPos.x,buttonStartPos.y+(1*(buttonMargin+btnHeight)),buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(1*(buttonMargin+btnHeight))),context,R.drawable.rd_btn,.4f,.4f,rocketDamage,1f))
-        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(2*(buttonMargin+btnHeight))),RectF(buttonStartPos.x,buttonStartPos.y+(2*(buttonMargin+btnHeight)),buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(2*(buttonMargin+btnHeight))),context,R.drawable.ed_btn,.4f,.4f,expDamage,1f))
-        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))),RectF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight)),buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(3*(buttonMargin+btnHeight))),context,R.drawable.er_btn,.4f,.4f,expRadius,.1f))
-        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))),RectF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight)),buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(3*(buttonMargin+btnHeight))),context,R.drawable.er_btn,.4f,.4f,reloadSpeed,.1f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(0*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(0*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(0*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.rs_btn,.4f,.4f,rocketSpeed,.5f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(1*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(1*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(1*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.rd_btn,.4f,.4f,rocketDamage,1f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(2*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(2*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(2*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.ed_btn,.4f,.4f,expDamage,1f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(3*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.er_btn,.4f,.4f,expRadius,.1f))
+        clickableList.add(CounterButton(PointF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))+buttonMargin*2),RectF(buttonStartPos.x,buttonStartPos.y+(3*(buttonMargin+btnHeight))+buttonMargin*2,buttonStartPos.x+btnHeight,buttonStartPos.y+btnHeight+(3*(buttonMargin+btnHeight))+buttonMargin*2),context,R.drawable.er_btn,.4f,.4f,reloadSpeed,.1f))
 
         hpmax = 50
         hp = hpmax
@@ -111,6 +111,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
             paint.color = Color.argb(255, 25, 255, 25)
             // Choose the font size
             paint.textSize = fontSize.toFloat()
+                paint.strokeWidth= 10f
 
             canvas.drawLine(0f, walls.y * earthH, walls.x, walls.y * earthH, paint)
             // Draw what needs drawing
@@ -178,16 +179,23 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
 
 
             paint.color = Color.argb(255, 25, 255, 25)
-            paint.textSize = 40f
+            paint.textSize = buttonMargin*3
             canvas.drawText(
                 "<$score>",
-                walls.x - 120f, 160f, paint
+                walls.x*.45f, (earthH+1f)/2f*walls.y+buttonMargin, paint
             )
             paint.color = Color.argb(255, 255, 25, 25)
             canvas.drawText(
                 "<$hp>/<$hpmax>",
-                20f, 60f, paint
+                 buttonMargin, (earthH+1f)/2f*walls.y+buttonMargin, paint
             )
+                paint.textSize = buttonMargin*2
+                paint.color = Color.argb(255, 0, 153, 255)
+            canvas.drawText(
+                "$currencyING",
+                walls.x-buttonMargin*3-btnHeight, buttonMargin*2, paint
+            )
+
         }else{
                 canvas.drawColor(Color.argb(255, 75, 75, 152))
                 // Choose a color to paint with
@@ -234,6 +242,12 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
 
             }
 
+            if(hp<prevHp)
+            {
+                canvas.drawColor(Color.argb(80,255,0,0))
+                prevHp=hp
+            }
+
             // Display the drawing on screen
             // unlockCanvasAndPost is a
             // function of SurfaceHolder
@@ -250,7 +264,7 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
         canvas.drawText("No ${collidables.size}", 10f, (debugStart + debugSize*2f).toFloat(), paint)
         canvas.drawText("time: ${gameTimeMillis/1000}", 10f, (debugStart + debugSize*3f).toFloat(), paint)
         canvas.drawText("A: ${counterA}", 10f, (debugStart + debugSize*4f).toFloat(), paint)
-
+        canvas.drawText("INGC: ${currencyING}", 10f, (debugStart + debugSize*5f).toFloat(), paint)
     }
     override fun run() {
         // The drawing Boolean gives us finer control
@@ -414,7 +428,11 @@ class LiveDrawingView(context: Context, mScreenX : Int, mScreenY: Int): SurfaceV
                 for (cl in clickableList) {
                     if(cl.hitBox.contains(motionEvent.x,motionEvent.y))
                     {
-                        cl.onClick(PointF(motionEvent.x,motionEvent.y))
+                        if (cl.upgradecost<=currencyING)
+                        {
+                            currencyING-=cl.upgradecost
+                            cl.onClick(PointF(motionEvent.x,motionEvent.y))
+                        }
                     }
                 }
             }

@@ -7,6 +7,7 @@ import kotlin.math.*
 
 abstract class Clickable(pos: PointF, rect: RectF,context: Context) : GameObject(pos,context) {
     var hitBox : RectF = rect
+    var upgradecost : Int = 0
     abstract fun onClick(p : PointF)
 }
 
@@ -16,10 +17,16 @@ class CounterButton(pos: PointF, hitBox : RectF,context: Context,_ImageR: Int,_x
     var strokeWidth = 5f
     var showHitbox = true
     var incrAmonunt = 1f
+    var upgradeCount : Int = 0
     var counter = 1f
+    var margin = 0f
     init {
+        upgradecost= 20
         sizeX = _x
         sizeY = _y
+        margin = hitBox.height()/20f
+        sizeY *= hitBox.height()/100f
+        sizeX *= hitBox.height()/100f
         counter = _ctrStart
         incrAmonunt = _icrA
         imageR= _ImageR
@@ -35,6 +42,8 @@ class CounterButton(pos: PointF, hitBox : RectF,context: Context,_ImageR: Int,_x
 
     override fun onClick(p: PointF) {
         counter+=incrAmonunt
+        upgradeCount++
+        upgradecost+=10
     }
 
     override fun update(millisPassed: Long, vararg plus: Float) {
@@ -51,7 +60,7 @@ class CounterButton(pos: PointF, hitBox : RectF,context: Context,_ImageR: Int,_x
 
         paint.color=Color.argb(255,255,255,0)
         paint.textSize= hitBox.height()/3f
-        canvas.drawText("$counter",midP.x-30f,midP.y,paint)
+        canvas.drawText("$upgradeCount",hitBox.left+margin,hitBox.bottom-margin,paint)
         if (showHitbox){
             paint.color= Color.argb(255,255,255,0)
             paint.strokeWidth=strokeWidth
@@ -73,7 +82,7 @@ class Joystick(pos: PointF, hitBox : RectF,context: Context) : Clickable(pos, hi
     var padRadius : Float = 140f
     var margin = 5f
     var cursorRadius: Float
-    var showHitbox = true
+    var showHitbox = false
     var rotation = 0f
     init {
         //cursorRadius = (hitBox.bottom-hitBox.top)/3f

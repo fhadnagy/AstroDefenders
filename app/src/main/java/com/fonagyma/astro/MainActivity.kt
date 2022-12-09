@@ -19,6 +19,7 @@ class MainActivity : Activity() {
         val size = Point()
         display.getSize(size)
 
+
         ///passing on the screen ratio
         liveDrawingView = LiveDrawingView(this, size.x, size.y)
 
